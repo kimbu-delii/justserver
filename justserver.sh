@@ -2913,63 +2913,6 @@ cloudpanel_menu() {
 }
 
 # =====================================================
-# ANA MENÜ GÜNCELLEMESİ
-# =====================================================
-
-ana_menu_goster() {
-    echo -e "${MAVI}╔════════════════════════════════════╗${NC}"
-    echo -e "${MAVI}║         ANA İŞLEM MENÜSÜ          ║${NC}"
-    echo -e "${MAVI}╚════════════════════════════════════╝${NC}"
-    echo ""
-    echo -e "1) 🔧 Sistem Ayarla (Tek seferlik)"
-    echo -e "2) 🌐 BIND9 (DNS - ÖNCELİKLİ)"
-    echo -e "3) ☁️ CloudPanel (Web Panel + MySQL)"
-    echo -e "4) 📧 Mail Sunucu Yönetimi"
-    echo -e "5) 🧹 OpenCart Temizlik & İzin Modülü"
-    echo -e "0) ❌ Çıkış"
-    echo ""
-}
-
-# =====================================================
-# 🚀 ANA PROGRAM DÖNGÜSÜ
-# =====================================================
-
-main() {
-    while true; do
-        ana_baslik_goster
-        sistem_durumu_goster
-        ana_menu_goster
-
-        echo -e "${SARI}Seçiminizi yapın (0-5): ${NC}"
-        read -r secim
-
-        case $secim in
-            1)
-                sistem_ayarla
-                ;;
-            2)
-                bind9_menu
-                ;;
-            3)
-                cloudpanel_menu
-                ;;
-            4)
-                mail_servisleri  # <-- Buradaki fonksiyon zaten var!
-                ;;
-            5)
-                opencart_temizlik_izin_modulu
-                ;;
-            0)
-                cikis_yap
-                ;;
-            *)
-                gecersiz_secim
-                ;;
-        esac
-    done
-}
-
-# =====================================================
 # 📧 MAIL SUNUCU FONKSİYONLARI
 # =====================================================
 
@@ -4107,6 +4050,63 @@ goster_rapor
 echo -e "\n${YESIL}🎯 İşlem başarıyla tamamlandı!${NC}"
 echo -e "${MAVI}========================================${NC}"
 
+
+# =====================================================
+# 🏠 ANA MENÜ GÖSTERME FONKSİYONU
+# =====================================================
+ana_menu_goster() {
+    echo -e "${MAVI}╔════════════════════════════════════╗${NC}"
+    echo -e "${MAVI}║         ANA İŞLEM MENÜSÜ          ║${NC}"
+    echo -e "${MAVI}╚════════════════════════════════════╝${NC}"
+    echo ""
+    echo -e "1) 🔧 Sistem Ayarla (Tek seferlik)"
+    echo -e "2) 🌐 BIND9 (DNS - ÖNCELİKLİ)"
+    echo -e "3) ☁️ CloudPanel (Web Panel + MySQL)"
+    echo -e "4) 📧 Mail Sunucu Yönetimi"
+    echo -e "5) 🧹 OpenCart Temizlik & İzin Modülü"
+    echo -e "0) ❌ Çıkış"
+    echo ""
+}
+
+# =====================================================
+# 🚀 ANA PROGRAM DÖNGÜSÜ
+# =====================================================
+main() {
+    while true; do
+        ana_baslik_goster
+        sistem_durumu_goster
+        ana_menu_goster
+
+        echo -e "${SARI}Seçiminizi yapın (0-5): ${NC}"
+        read -r secim
+
+        case $secim in
+            1)
+                sistem_ayarla
+                ;;
+            2)
+                bind9_menu
+                ;;
+            3)
+                cloudpanel_menu
+                ;;
+            4)
+                mail_servisleri
+                ;;
+            5)
+                opencart_temizle
+                ;;
+            0)
+                cikis_yap
+                ;;
+            *)
+                gecersiz_secim
+                ;;
+        esac
+    done
+}
+# =====================================================
+
 # =====================================================
 # 🎬 PROGRAM BAŞLATMA
 # =====================================================
@@ -4262,32 +4262,6 @@ domain_gecerli_mi() {
     fi
 }
 
-# Ana program fonksiyonu
-main() {
-    while true; do
-        ana_baslik_goster
-        echo -e "${BEYAZ}Ana Menü:${NC}"
-        echo -e "1) 🔧 Sistem Ayarlarını Yap"
-        echo -e "2) 🌐 BIND9 DNS Sunucu Kurulumu"
-        echo -e "3) ☁️ CloudPanel Web Yönetim Paneli"
-        echo -e "4) 📧 Mail Sunucu Kurulumu"
-        echo -e "5) 🔄 OpenCart Temizleme Aracı"
-        echo -e "0) ❌ Çıkış"
-        echo ""
-        echo -e "${SARI}Seçiminizi yapın (0-5): ${NC}"
-        read -r secim
-
-        case $secim in
-            1) sistem_ayarla ;;
-            2) bind9_kur ;;
-            3) cloudpanel_kur ;;
-            4) mail_sunucu_kur ;;
-            5) opencart_temizle ;;
-            0) cikis_yap ;;
-            *) gecersiz_secim ;;
-        esac
-    done
-}
 
 # Eksik olan diğer fonksiyonları tanımla
 sistem_ayarla() {
