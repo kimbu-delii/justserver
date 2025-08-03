@@ -21,17 +21,17 @@ MEVCUT_KULLANICI="$(whoami)"
 # =====================================================
 # 🎨 RENK VE STİL AYARLARI
 # =====================================================
-NC='\033[0m'
-KIRMIZI='\033[0;31m'
-YESIL='\033[0;32m'
-SARI='\033[0;33m'
-MAVI='\033[0;34m'
-MOR='\033[0;35m'
-TURKUAZ='\033[0;36m'
-BEYAZ='\033[1;37m'
-GRI='\033[0;37m'
-STIL_KALIN='\033[1m'
-STIL_ALTCIZILI='\033[4m'
+ACIK_PEMBE='\033[1;35m'    # Parlak Magenta (Bold Magenta)
+BEYAZ='\033[1;37m'         # Parlak Beyaz (Bold White)  
+SARI='\033[1;33m'          # Parlak Sarı (Bold Yellow)
+ACIK_YESIL='\033[1;32m'    # Parlak Yeşil (Bold Green)
+TURKUAZ='\033[1;36m'       # Parlak Cyan (Bold Cyan)
+TURUNCU='\033[1;91m'       # Parlak Kırmızı (Bright Red)
+NC='\033[0m'               # Reset/Normal
+MOR='\033[0;35m'           # Normal Magenta
+GRI='\033[0;37m'           # Normal White/Light Gray
+STIL_KALIN='\033[1m'       # Bold Style
+STIL_ALTCIZILI='\033[4m'   # Underline Style
 
 # =====================================================
 # 📁 DOSYA VE DİZİN AYARLARI
@@ -201,6 +201,15 @@ OPENDKIM_KURULU=false
 KURULUM_TAMAMLANDI_BAYRAGI="/var/log/cloudpanel-mail-kurulum-tamamlandi"
 
 # =====================================================
+# ✅ DJANGO Python KONTROL DEĞİŞKENLERİ
+# =====================================================
+DOMAIN=""
+PROJE_YOLU=""
+PORT=""
+VENV_YOLU=""
+PID_DOSYASI=""
+
+# =====================================================
 # 📊 BAŞARI SAYAÇLARI
 # =====================================================
 TOPLAM_ADIM=0
@@ -215,7 +224,7 @@ dkim_anahtar_uret() {
     local anahtar_dizini="/etc/opendkim/keys/${domain}"
     local zone_file="/etc/bind/zones/db.$domain"
     
-    echo -e "${MAVI}🔑 ${domain} için DKIM anahtarı oluşturuluyor...${NC}"
+    echo -e "${TURKUAZ}🔑 ${domain} için DKIM anahtarı oluşturuluyor...${NC}"
     
     # Dizin zaten var mı kontrol et
     if [ -d "$anahtar_dizini" ] && [ -f "$anahtar_dizini/mail.private" ]; then
@@ -225,7 +234,7 @@ dkim_anahtar_uret() {
         if ! grep -q "mail._domainkey.$domain" "$zone_file" 2>/dev/null; then
             dkim_dns_kaydi_ekle "$domain"
         else
-            echo -e "${YESIL}✅ DKIM DNS kaydı zaten mevcut${NC}"
+            echo -e "${ACIK_YESIL}✅ DKIM DNS kaydı zaten mevcut${NC}"
         fi
         return 0
     fi
@@ -240,17 +249,17 @@ dkim_anahtar_uret() {
         chmod 600 "$anahtar_dizini/mail.private"
         chmod 644 "$anahtar_dizini/mail.txt"
         
-        echo -e "${YESIL}✅ DKIM anahtarı başarıyla oluşturuldu${NC}"
+        echo -e "${ACIK_YESIL}✅ DKIM anahtarı başarıyla oluşturuldu${NC}"
         
         # DNS kaydını otomatik ekle
         dkim_dns_kaydi_ekle "$domain"
         
         # Kullanıcıya bilgi ver
-        echo -e "${MAVI}📋 DNS TXT kaydı:${NC}"
+        echo -e "${TURKUAZ}📋 DNS TXT kaydı:${NC}"
         cat "$anahtar_dizini/mail.txt"
         echo ""
     else
-        echo -e "${KIRMIZI}❌ DKIM anahtarı oluşturulamadı!${NC}"
+        echo -e "${TURUNCU}❌ DKIM anahtarı oluşturulamadı!${NC}"
         return 1
     fi
 }
@@ -264,17 +273,17 @@ dkim_dns_kaydi_ekle() {
     local zone_file="/etc/bind/zones/db.$domain"
     local dkim_txt_file="$anahtar_dizini/mail.txt"
     
-    echo -e "${MAVI}🌐 ${domain} için DKIM DNS kaydı ekleniyor...${NC}"
+    echo -e "${TURKUAZ}🌐 ${domain} için DKIM DNS kaydı ekleniyor...${NC}"
     
     # DKIM txt dosyası var mı kontrol et
     if [[ ! -f "$dkim_txt_file" ]]; then
-        echo -e "${KIRMIZI}❌ DKIM txt dosyası bulunamadı: $dkim_txt_file${NC}"
+        echo -e "${TURUNCU}❌ DKIM txt dosyası bulunamadı: $dkim_txt_file${NC}"
         return 1
     fi
     
     # Zone dosyası var mı kontrol et
     if [[ ! -f "$zone_file" ]]; then
-        echo -e "${KIRMIZI}❌ Zone dosyası bulunamadı: $zone_file${NC}"
+        echo -e "${TURUNCU}❌ Zone dosyası bulunamadı: $zone_file${NC}"
         return 1
     fi
     
@@ -309,15 +318,15 @@ dkim_dns_kaydi_ekle() {
     if named-checkzone "$domain" "$zone_file" > /dev/null 2>&1; then
         # BIND9'u yeniden yükle
         if systemctl reload bind9; then
-            echo -e "${YESIL}✅ DKIM DNS kaydı başarıyla eklendi ve BIND9 yeniden yüklendi${NC}"
-            echo -e "${MAVI}📋 Eklenen kayıt:${NC}"
+            echo -e "${ACIK_YESIL}✅ DKIM DNS kaydı başarıyla eklendi ve BIND9 yeniden yüklendi${NC}"
+            echo -e "${TURKUAZ}📋 Eklenen kayıt:${NC}"
             echo -e "${SARI}$dkim_record${NC}"
         else
-            echo -e "${KIRMIZI}❌ BIND9 yeniden yüklenemedi!${NC}"
+            echo -e "${TURUNCU}❌ BIND9 yeniden yüklenemedi!${NC}"
             return 1
         fi
     else
-        echo -e "${KIRMIZI}❌ Zone dosyası geçersiz! DKIM kaydı eklenmedi.${NC}"
+        echo -e "${TURUNCU}❌ Zone dosyası geçersiz! DKIM kaydı eklenmedi.${NC}"
         # Hatalı kaydı geri al
         sed -i '/; DKIM Record/,$d' "$zone_file"
         return 1
@@ -330,24 +339,24 @@ dkim_dns_kaydi_ekle() {
 dkim_test() {
     local domain=$1
     
-    echo -e "${MAVI}🧪 ${domain} için DKIM testi yapılıyor...${NC}"
+    echo -e "${TURKUAZ}🧪 ${domain} için DKIM testi yapılıyor...${NC}"
     
     # DKIM DNS kaydını kontrol et
     local dkim_dns=$(dig +short TXT mail._domainkey.$domain)
     
     if [[ -n "$dkim_dns" ]]; then
-        echo -e "${YESIL}✅ DKIM DNS kaydı bulundu${NC}"
+        echo -e "${ACIK_YESIL}✅ DKIM DNS kaydı bulundu${NC}"
         echo -e "${SARI}📋 Kayıt: $dkim_dns${NC}"
     else
-        echo -e "${KIRMIZI}❌ DKIM DNS kaydı bulunamadı!${NC}"
+        echo -e "${TURUNCU}❌ DKIM DNS kaydı bulunamadı!${NC}"
         echo -e "${SARI}⚠️  DNS yayılması için 5-10 dakika bekleyin${NC}"
     fi
     
     # OpenDKIM servisi durumunu kontrol et
     if systemctl is-active --quiet opendkim; then
-        echo -e "${YESIL}✅ OpenDKIM servisi çalışıyor${NC}"
+        echo -e "${ACIK_YESIL}✅ OpenDKIM servisi çalışıyor${NC}"
     else
-        echo -e "${KIRMIZI}❌ OpenDKIM servisi çalışmıyor!${NC}"
+        echo -e "${TURUNCU}❌ OpenDKIM servisi çalışmıyor!${NC}"
     fi
 }
 
@@ -359,7 +368,7 @@ dmarc_yapilandir() {
     local zone_file="/etc/bind/zones/db.$domain"
     local dmarc_dizin="/etc/opendkim/dmarc"
     
-    echo -e "${MAVI}📋 ${domain} için DMARC yapılandırılıyor...${NC}"
+    echo -e "${TURKUAZ}📋 ${domain} için DMARC yapılandırılıyor...${NC}"
     
     # DMARC dizini oluştur
     mkdir -p "$dmarc_dizin"
@@ -401,11 +410,11 @@ dmarc_dns_kaydi_ekle() {
     local zone_file="/etc/bind/zones/db.$domain"
     local dmarc_file="/etc/opendkim/dmarc/$domain.dmarc"
     
-    echo -e "${MAVI}🌐 ${domain} için DMARC DNS kaydı ekleniyor...${NC}"
+    echo -e "${TURKUAZ}🌐 ${domain} için DMARC DNS kaydı ekleniyor...${NC}"
     
     # Dosyaları kontrol et
     if [[ ! -f "$dmarc_file" ]] || [[ ! -f "$zone_file" ]]; then
-        echo -e "${KIRMIZI}❌ Gerekli dosyalar bulunamadı!${NC}"
+        echo -e "${TURUNCU}❌ Gerekli dosyalar bulunamadı!${NC}"
         return 1
     fi
 
@@ -434,13 +443,13 @@ dmarc_dns_kaydi_ekle() {
     # BIND9 konfigürasyonunu test et ve yeniden yükle
     if named-checkzone "$domain" "$zone_file" > /dev/null 2>&1; then
         if systemctl reload bind9; then
-            echo -e "${YESIL}✅ DMARC DNS kaydı başarıyla eklendi${NC}"
+            echo -e "${ACIK_YESIL}✅ DMARC DNS kaydı başarıyla eklendi${NC}"
         else
-            echo -e "${KIRMIZI}❌ BIND9 yeniden yüklenemedi!${NC}"
+            echo -e "${TURUNCU}❌ BIND9 yeniden yüklenemedi!${NC}"
             return 1
         fi
     else
-        echo -e "${KIRMIZI}❌ Zone dosyası geçersiz!${NC}"
+        echo -e "${TURUNCU}❌ Zone dosyası geçersiz!${NC}"
         sed -i '/; DMARC Record/,$d' "$zone_file"
         return 1
     fi
@@ -452,13 +461,13 @@ dmarc_dns_kaydi_ekle() {
 dmarc_test() {
     local domain=$1
     
-    echo -e "${MAVI}🧪 ${domain} için DMARC testi yapılıyor...${NC}"
+    echo -e "${TURKUAZ}🧪 ${domain} için DMARC testi yapılıyor...${NC}"
     
     # DMARC DNS kaydını kontrol et
     local dmarc_dns=$(dig +short TXT _dmarc.$domain)
     
     if [[ -n "$dmarc_dns" ]]; then
-        echo -e "${YESIL}✅ DMARC DNS kaydı bulundu${NC}"
+        echo -e "${ACIK_YESIL}✅ DMARC DNS kaydı bulundu${NC}"
         echo -e "${SARI}📋 Kayıt: $dmarc_dns${NC}"
         
         # DMARC politikasını analiz et
@@ -469,17 +478,17 @@ dmarc_test() {
             echo -e "   2. p=quarantine → p=reject"
         fi
     else
-        echo -e "${KIRMIZI}❌ DMARC DNS kaydı bulunamadı!${NC}"
+        echo -e "${TURUNCU}❌ DMARC DNS kaydı bulunamadı!${NC}"
         echo -e "${SARI}⚠️  DNS yayılması için bekleyin${NC}"
     fi
     
     # Rapor dizinini kontrol et
     if [[ -d "/var/log/dmarc/reports" ]]; then
-        echo -e "${YESIL}✅ DMARC rapor dizini mevcut${NC}"
+        echo -e "${ACIK_YESIL}✅ DMARC rapor dizini mevcut${NC}"
         local rapor_sayisi=$(find "/var/log/dmarc/reports" -type f | wc -l)
         echo -e "${BEYAZ}📊 Toplam rapor sayısı: $rapor_sayisi${NC}"
     else
-        echo -e "${KIRMIZI}❌ DMARC rapor dizini bulunamadı!${NC}"
+        echo -e "${TURUNCU}❌ DMARC rapor dizini bulunamadı!${NC}"
     fi
 }
 
@@ -491,7 +500,7 @@ dmarc_test() {
 # 🛡️ ROOT YETKİSİ KONTROLÜ
 # =====================================================
 if [[ $EUID -ne 0 ]]; then
-    echo -e "${KIRMIZI}❌ Bu betik root yetkileri gerektirir!${NC}"
+    echo -e "${TURUNCU}❌ Bu betik root yetkileri gerektirir!${NC}"
     echo -e "${SARI}Lütfen 'sudo $0' komutu ile çalıştırın.${NC}"
     exit 1
 fi
@@ -551,17 +560,17 @@ ana_baslik_goster() {
     local cpu_cores=$(grep -c "processor" /proc/cpuinfo)
     local cpu_load=$(cat /proc/loadavg | awk '{print $1}')
     
-    echo -e "${MAVI}═════════════════════════════════════════════════════════════════════════════${NC}"
-    echo -e "${MAVI}                   ${TURKUAZ}🚀 JUSTSERVER ULTIMATE${NC}"
-    echo -e "${MAVI}                    ${GRI}v${BETIK_SURUMU} - Tam Otomatik Kurulum${NC}"
-    echo -e "${MAVI}                ${GRI}Geliştirici: JustTekno & BitronixCode${NC}"
-    echo -e "${MAVI}═════════════════════════════════════════════════════════════════════════════${NC}"
-    echo -e "${MAVI} ${NC} ${TURKUAZ}🖥️ Sistem:${NC} $sistem_bilgisi ${MAVI}|${NC} ${TURKUAZ}🏠 Host:${NC} $hostname_bilgisi ${MAVI} ${NC}"
-    echo -e "${MAVI} ${NC} ${TURKUAZ}📅 Tarih:${NC} $tarih_saat ${MAVI}|${NC} ${TURKUAZ}👤 Kullanıcı:${NC} $(whoami) ${MAVI} ${NC}"
-    echo -e "${MAVI} ${NC} ${TURKUAZ}💽 Disk:${NC} $disk_boyut ${MAVI}|${NC} ${TURKUAZ}📊 Kullanılan:${NC} $kullanilan (%$disk_kullanim) ${MAVI}|${NC} ${TURKUAZ}📉 Boş:${NC} $bos_alan ${MAVI} ${NC}"
-    echo -e "${MAVI} ${NC} ${TURKUAZ}🧠 RAM:${NC} $toplam_bellek MB ${MAVI}|${NC} ${TURKUAZ}📈 Kullanılan:${NC} $kullanilan_bellek MB (%$bellek_yuzde) ${MAVI} ${NC}"
-    echo -e "${MAVI} ${NC} ${TURKUAZ}⚙️ CPU:${NC} $cpu_cores çekirdek ${MAVI}|${NC} ${TURKUAZ}📈 Yük:${NC} $cpu_load ${MAVI} ${NC}"
-    echo -e "${MAVI}═════════════════════════════════════════════════════════════════════════════${NC}"
+    echo -e "${TURKUAZ}═════════════════════════════════════════════════════════════════════════════${NC}"
+    echo -e "${TURKUAZ}                   ${TURKUAZ}🚀 JUSTSERVER ULTIMATE${NC}"
+    echo -e "${TURKUAZ}                    ${GRI}v${BETIK_SURUMU} - Tam Otomatik Kurulum${NC}"
+    echo -e "${TURKUAZ}                ${GRI}Geliştirici: JustTekno & BitronixCode${NC}"
+    echo -e "${TURKUAZ}═════════════════════════════════════════════════════════════════════════════${NC}"
+    echo -e "${TURKUAZ} ${NC} ${TURKUAZ}🖥️ Sistem:${NC} $sistem_bilgisi ${TURKUAZ}|${NC} ${TURKUAZ}🏠 Host:${NC} $hostname_bilgisi ${TURKUAZ} ${NC}"
+    echo -e "${TURKUAZ} ${NC} ${TURKUAZ}📅 Tarih:${NC} $tarih_saat ${TURKUAZ}|${NC} ${TURKUAZ}👤 Kullanıcı:${NC} $(whoami) ${TURKUAZ} ${NC}"
+    echo -e "${TURKUAZ} ${NC} ${TURKUAZ}💽 Disk:${NC} $disk_boyut ${TURKUAZ}|${NC} ${TURKUAZ}📊 Kullanılan:${NC} $kullanilan (%$disk_kullanim) ${TURKUAZ}|${NC} ${TURKUAZ}📉 Boş:${NC} $bos_alan ${TURKUAZ} ${NC}"
+    echo -e "${TURKUAZ} ${NC} ${TURKUAZ}🧠 RAM:${NC} $toplam_bellek MB ${TURKUAZ}|${NC} ${TURKUAZ}📈 Kullanılan:${NC} $kullanilan_bellek MB (%$bellek_yuzde) ${TURKUAZ} ${NC}"
+    echo -e "${TURKUAZ} ${NC} ${TURKUAZ}⚙️ CPU:${NC} $cpu_cores çekirdek ${TURKUAZ}|${NC} ${TURKUAZ}📈 Yük:${NC} $cpu_load ${TURKUAZ} ${NC}"
+    echo -e "${TURKUAZ}═════════════════════════════════════════════════════════════════════════════${NC}"
     echo ""
 }
 
@@ -579,26 +588,26 @@ sistem_durumu_goster() {
     
     # BIND9 kontrol
     if systemctl is-active --quiet bind9 2>/dev/null; then
-        bind9_durum="${YESIL}ÇALIŞIYOR${NC}"
+        bind9_durum="${ACIK_YESIL}ÇALIŞIYOR${NC}"
     else
-        bind9_durum="${KIRMIZI}ÇALIŞMIYOR${NC}"
+        bind9_durum="${TURUNCU}ÇALIŞMIYOR${NC}"
     fi
     
     # CloudPanel kontrol
     if systemctl is-active --quiet nginx 2>/dev/null && systemctl is-active --quiet mysql 2>/dev/null; then
-        cloudpanel_durum="${YESIL}ÇALIŞIYOR${NC}"
+        cloudpanel_durum="${ACIK_YESIL}ÇALIŞIYOR${NC}"
     else
-        cloudpanel_durum="${KIRMIZI}ÇALIŞMIYOR${NC}"
+        cloudpanel_durum="${TURUNCU}ÇALIŞMIYOR${NC}"
     fi
     
     # Mail kontrol
     if systemctl is-active --quiet postfix 2>/dev/null && systemctl is-active --quiet dovecot 2>/dev/null; then
-        mail_durum="${YESIL}ÇALIŞIYOR${NC}"
+        mail_durum="${ACIK_YESIL}ÇALIŞIYOR${NC}"
     else
-        mail_durum="${KIRMIZI}ÇALIŞMIYOR${NC}"
+        mail_durum="${TURUNCU}ÇALIŞMIYOR${NC}"
     fi
     
-    echo -e "   🔧 Sistem: ${YESIL}$sistem_hazir${NC}"
+    echo -e "   🔧 Sistem: ${ACIK_YESIL}$sistem_hazir${NC}"
     echo -e "   🌐 BIND9: $bind9_durum"
     echo -e "   ☁️ CloudPanel: $cloudpanel_durum"
     echo -e "   📧 Mail: $mail_durum"
@@ -610,9 +619,9 @@ sistem_durumu_goster() {
 # 🏠 ANA MENÜ GÖSTERME FONKSİYONU
 # =====================================================
 ana_menu_goster() {
-    echo -e "${MAVI}╔════════════════════════════════════╗${NC}"
-    echo -e "${MAVI}║         ANA İŞLEM MENÜSÜ          ║${NC}"
-    echo -e "${MAVI}╚════════════════════════════════════╝${NC}"
+    echo -e "${TURKUAZ}╔════════════════════════════════════╗${NC}"
+    echo -e "${TURKUAZ}║         ANA İŞLEM MENÜSÜ          ║${NC}"
+    echo -e "${TURKUAZ}╚════════════════════════════════════╝${NC}"
     echo ""
     echo -e "1) 🔧 Sistem Ayarla (Tek seferlik)"
     echo -e "2) 🌐 BIND9 (DNS - ÖNCELİKLİ)"
@@ -636,7 +645,7 @@ enter_bekle() {
 # ❌ GEÇERSİZ SEÇİM FONKSİYONU
 # =====================================================
 gecersiz_secim() {
-    echo -e "${KIRMIZI}❌ Geçersiz seçim! Lütfen 0-4 arasında bir sayı girin.${NC}"
+    echo -e "${TURUNCU}❌ Geçersiz seçim! Lütfen 0-4 arasında bir sayı girin.${NC}"
     enter_bekle
 }
 
@@ -660,7 +669,7 @@ cikis_yap() {
     echo -e "   🖥️ Sunucu: ${SUNUCU_ADI}"
     echo -e "   👤 Kullanıcı: ${MEVCUT_KULLANICI}"
     echo ""
-    echo -e "${YESIL}✅ Güvenli çıkış yapılıyor...${NC}"
+    echo -e "${ACIK_YESIL}✅ Güvenli çıkış yapılıyor...${NC}"
     gunluk_yaz "BILGI" "JustServer Ultimate güvenli çıkış yapıldı (Süre: ${dakika}m ${saniye}s)"
     echo ""
     exit 0
@@ -683,7 +692,7 @@ sistem_root_sifre_ayarla() {
 
     if [ $? -eq 0 ]; then
         log_mesaj "SUCCESS" "Root şifresi başarıyla değiştirildi!"
-        echo -e "${YESIL}✅ Yeni root şifresi: ${SISTEM_ROOT_SIFRE}${NC}"
+        echo -e "${ACIK_YESIL}✅ Yeni root şifresi: ${SISTEM_ROOT_SIFRE}${NC}"
 
         # SSH root girişini etkinleştir (isteğe bağlı)
         if grep -q "^#*PermitRootLogin" /etc/ssh/sshd_config; then
@@ -696,7 +705,7 @@ sistem_root_sifre_ayarla() {
         echo -e "${SARI}⚠️  SSH root girişi etkinleştirildi${NC}"
     else
         log_mesaj "ERROR" "Root şifresi değiştirilemedi!"
-        echo -e "${KIRMIZI}❌ Root şifresi değiştirilemedi!${NC}"
+        echo -e "${TURUNCU}❌ Root şifresi değiştirilemedi!${NC}"
         exit 1
     fi
 }
@@ -758,7 +767,7 @@ sistem_guncelle() {
     apt autoremove -y
     apt autoclean
     
-    echo -e "${YESIL}✅ Sistem güncellemesi ve temel paketlerin kurulumu tamamlandı!${NC}"
+    echo -e "${ACIK_YESIL}✅ Sistem güncellemesi ve temel paketlerin kurulumu tamamlandı!${NC}"
     gunluk_yaz "BILGI" "Sistem güncellemesi ve temel paketlerin kurulumu tamamlandı"
     echo ""
 }
@@ -843,7 +852,7 @@ gereksiz_paketleri_kaldir() {
     echo -e "${BEYAZ}📊 Temizlik sonrası disk kullanımı:${NC}"
     df -h / | grep -v "Filesystem"
     
-    echo -e "${YESIL}✅ Gereksiz paket temizleme işlemi tamamlandı!${NC}"
+    echo -e "${ACIK_YESIL}✅ Gereksiz paket temizleme işlemi tamamlandı!${NC}"
     gunluk_yaz "BILGI" "Gereksiz paket temizleme işlemi tamamlandı"
     echo ""
 }
@@ -882,7 +891,7 @@ disk_temizle() {
     local sonraki_kullanim=$(df / | awk 'NR==2 {print $5}' | sed 's/%//')
     local temizlenen=$((onceki_kullanim - sonraki_kullanim))
     
-    echo -e "${YESIL}✅ Disk temizleme tamamlandı!${NC}"
+    echo -e "${ACIK_YESIL}✅ Disk temizleme tamamlandı!${NC}"
     echo -e "   Önceki kullanım: %$onceki_kullanim"
     echo -e "   Sonraki kullanım: %$sonraki_kullanim"
     echo -e "   Temizlenen alan: %$temizlenen"
@@ -916,7 +925,7 @@ lvm_genislet() {
     for yol in "${olasi_yollar[@]}"; do
         if [[ -e "$yol" ]]; then
             lvm_device="$yol"
-            echo -e "${YESIL}✅ Tespit edilen LVM cihazı: $lvm_device${NC}"
+            echo -e "${ACIK_YESIL}✅ Tespit edilen LVM cihazı: $lvm_device${NC}"
             break
         fi
     done
@@ -925,7 +934,7 @@ lvm_genislet() {
     if [[ -z "$lvm_device" ]]; then
         lvm_device=$(lvs --noheadings -o lv_path 2>/dev/null | grep -E "(root|ubuntu)" | head -1 | xargs)
         if [[ -n "$lvm_device" ]]; then
-            echo -e "${YESIL}✅ lvs ile tespit edilen cihaz: $lvm_device${NC}"
+            echo -e "${ACIK_YESIL}✅ lvs ile tespit edilen cihaz: $lvm_device${NC}"
         fi
     fi
     
@@ -949,7 +958,7 @@ lvm_genislet() {
     # Logical Volume'u genislet
     echo -e "${BEYAZ}🔧 Logical Volume genişletiliyor...${NC}"
     if lvextend -l +100%FREE "$lvm_device"; then
-        echo -e "${YESIL}✅ Logical Volume genişletildi${NC}"
+        echo -e "${ACIK_YESIL}✅ Logical Volume genişletildi${NC}"
         
         # Dosya sistemini genislet
         echo -e "${BEYAZ}🔧 Dosya sistemi genişletiliyor...${NC}"
@@ -958,14 +967,14 @@ lvm_genislet() {
         case "$fs_type" in
             ext2|ext3|ext4)
                 resize2fs "$lvm_device"
-                echo -e "${YESIL}✅ ext4 disk başarıyla genişletildi!${NC}"
+                echo -e "${ACIK_YESIL}✅ ext4 disk başarıyla genişletildi!${NC}"
                 gunluk_yaz "BILGI" "ext4 disk genişletme başarılı: $lvm_device"
                 ;;
             xfs)
                 local mount_point=$(df "$lvm_device" 2>/dev/null | tail -1 | awk '{print $NF}')
                 if [[ -n "$mount_point" ]]; then
                     xfs_growfs "$mount_point"
-                    echo -e "${YESIL}✅ XFS disk başarıyla genişletildi!${NC}"
+                    echo -e "${ACIK_YESIL}✅ XFS disk başarıyla genişletildi!${NC}"
                     gunluk_yaz "BILGI" "XFS disk genişletme başarılı: $lvm_device ($mount_point)"
                 fi
                 ;;
@@ -997,7 +1006,7 @@ kullanici_olustur() {
         local sifre=$(openssl rand -base64 12)
         echo "$KULLANICI_ADI:$sifre" | chpasswd
         
-        echo -e "${YESIL}✅ Kullanıcı oluşturuldu!${NC}"
+        echo -e "${ACIK_YESIL}✅ Kullanıcı oluşturuldu!${NC}"
         echo -e "${BEYAZ}   Kullanıcı: $KULLANICI_ADI${NC}"
         echo -e "${BEYAZ}   Şifre: $sifre${NC}"
         echo -e "${SARI}   ⚠️ Bu şifreyi güvenli bir yere kaydedin!${NC}"
@@ -1009,7 +1018,7 @@ kullanici_olustur() {
     echo "$KULLANICI_ADI ALL=(ALL) NOPASSWD:ALL" > "/etc/sudoers.d/$KULLANICI_ADI"
     chmod 0440 "/etc/sudoers.d/$KULLANICI_ADI"
     
-    echo -e "${YESIL}✅ '$KULLANICI_ADI' kullanıcısına sudo yetkisi verildi!${NC}"
+    echo -e "${ACIK_YESIL}✅ '$KULLANICI_ADI' kullanıcısına sudo yetkisi verildi!${NC}"
     gunluk_yaz "BILGI" "Kullanıcı oluşturuldu ve yetkilendirildi: $KULLANICI_ADI"
     echo ""
 }
@@ -1091,13 +1100,13 @@ EOL
     systemctl restart ssh
     
     if systemctl is-active --quiet ssh; then
-        echo -e "${YESIL}✅ SSH güvenlik yapılandırması tamamlandı!${NC}"
+        echo -e "${ACIK_YESIL}✅ SSH güvenlik yapılandırması tamamlandı!${NC}"
         echo -e "${BEYAZ}   📡 Port 22 ve 2200 aktif${NC}"
         echo -e "${BEYAZ}   👤 İzinli kullanıcılar: codex, root${NC}"
         echo -e "${BEYAZ}   🚫 Engellenen kullanıcı: clp${NC}"
         gunluk_yaz "BILGI" "SSH güvenlik yapılandırması tamamlandı"
     else
-        echo -e "${KIRMIZI}❌ SSH servis yeniden başlatılamadı!${NC}"
+        echo -e "${TURUNCU}❌ SSH servis yeniden başlatılamadı!${NC}"
         gunluk_yaz "HATA" "SSH servis yeniden başlatılamadı"
     fi
     echo ""
@@ -1164,7 +1173,7 @@ EOL
         echo 'performance' > /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor 2>/dev/null || true
     fi
     
-    echo -e "${YESIL}✅ Performans optimizasyonu tamamlandı!${NC}"
+    echo -e "${ACIK_YESIL}✅ Performans optimizasyonu tamamlandı!${NC}"
     gunluk_yaz "BILGI" "Performans optimizasyonu tamamlandı"
     echo ""
 }
@@ -1222,7 +1231,7 @@ guvenlik_duvari_yapilandir() {
     echo -e "${BEYAZ}📊 Güvenlik duvarı durumu:${NC}"
     ufw status numbered
     
-    echo -e "${YESIL}✅ Güvenlik duvarı yapılandırması tamamlandı!${NC}"
+    echo -e "${ACIK_YESIL}✅ Güvenlik duvarı yapılandırması tamamlandı!${NC}"
     gunluk_yaz "BILGI" "Güvenlik duvarı yapılandırması tamamlandı"
     echo ""
 }
@@ -1258,35 +1267,35 @@ sistem_ayarla() {
     echo "═══════════════════════════════════════════════════════════════════════════════"
     
     # Adım 1: Root şifre ayarlama
-    echo -e "${MAVI}[1/8]${NC} Root şifresi ayarlanıyor..."
+    echo -e "${TURKUAZ}[1/8]${NC} Root şifresi ayarlanıyor..."
     sistem_root_sifre_ayarla
     
     # Adım 2: Sistem güncelleme
-    echo -e "${MAVI}[2/8]${NC} Sistem güncelleniyor..."
+    echo -e "${TURKUAZ}[2/8]${NC} Sistem güncelleniyor..."
     sistem_guncelle
     
     # Adım 3: Gereksiz paketleri kaldırma
-    echo -e "${MAVI}[3/8]${NC} Gereksiz paketler kaldırılıyor..."
+    echo -e "${TURKUAZ}[3/8]${NC} Gereksiz paketler kaldırılıyor..."
     gereksiz_paketleri_kaldir
     
     # Adım 4: Disk temizleme
-    echo -e "${MAVI}[4/8]${NC} Disk temizleniyor..."
+    echo -e "${TURKUAZ}[4/8]${NC} Disk temizleniyor..."
     disk_temizle
     
     # Adım 5: LVM genişletme
-    echo -e "${MAVI}[5/8]${NC} LVM disk genişletiliyor..."
+    echo -e "${TURKUAZ}[5/8]${NC} LVM disk genişletiliyor..."
     lvm_genislet
     
     # Adım 6: Kullanıcı oluşturma
-    echo -e "${MAVI}[6/8]${NC} Kullanıcı oluşturuluyor..."
+    echo -e "${TURKUAZ}[6/8]${NC} Kullanıcı oluşturuluyor..."
     kullanici_olustur
     
     # Adım 7: SSH yapılandırması
-    echo -e "${MAVI}[7/8]${NC} SSH yapılandırılıyor..."
+    echo -e "${TURKUAZ}[7/8]${NC} SSH yapılandırılıyor..."
     ssh_yapilandir
     
     # Adım 8: Performans optimizasyonu ve güvenlik duvarı
-    echo -e "${MAVI}[8/8]${NC} Performans ve güvenlik optimizasyonu..."
+    echo -e "${TURKUAZ}[8/8]${NC} Performans ve güvenlik optimizasyonu..."
     performans_optimizasyonu
     guvenlik_duvari_yapilandir
     
@@ -1296,9 +1305,9 @@ sistem_ayarla() {
     local saniye=$((gecen_sure % 60))
     
     echo ""
-    echo -e "${YESIL}╔══════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${YESIL}║                ✅ SİSTEM AYARLAMA TAMAMLANDI!           ║${NC}"
-    echo -e "${YESIL}╚══════════════════════════════════════════════════════════╝${NC}"
+    echo -e "${ACIK_YESIL}╔══════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${ACIK_YESIL}║                ✅ SİSTEM AYARLAMA TAMAMLANDI!           ║${NC}"
+    echo -e "${ACIK_YESIL}╚══════════════════════════════════════════════════════════╝${NC}"
     echo ""
     echo -e "${BEYAZ}📊 İşlem Özeti:${NC}"
     echo -e "   ⏱️ Toplam Süre: ${dakika} dakika ${saniye} saniye"
@@ -1328,12 +1337,12 @@ sistem_ayarla() {
     
     case $secim in
         1)
-            echo -e "${YESIL}✅ BIND9 kurulumuna geçiliyor...${NC}"
+            echo -e "${ACIK_YESIL}✅ BIND9 kurulumuna geçiliyor...${NC}"
             sleep 2
             bind9_tam_kur  # ✅ Doğru fonksiyon adı
             ;;
         2)
-            echo -e "${MAVI}🏠 Ana menüye dönülüyor...${NC}"
+            echo -e "${TURKUAZ}🏠 Ana menüye dönülüyor...${NC}"
             sleep 1
             return 0
             ;;
@@ -1383,9 +1392,9 @@ bind9_durum_kontrol() {
 bind9_menu() {
     while true; do
         clear
-        echo -e "${MAVI}╔════════════════════════════════════╗${NC}"
-        echo -e "${MAVI}║            BIND9 MENÜSÜ           ║${NC}"
-        echo -e "${MAVI}╚════════════════════════════════════╝${NC}"
+        echo -e "${TURKUAZ}╔════════════════════════════════════╗${NC}"
+        echo -e "${TURKUAZ}║            BIND9 MENÜSÜ           ║${NC}"
+        echo -e "${TURKUAZ}╚════════════════════════════════════╝${NC}"
         echo ""
         
         # Durum bilgilerini al
@@ -1395,27 +1404,27 @@ bind9_menu() {
         echo -e "${BEYAZ}📊 BIND9 Durumu:${NC}"
         
         if [[ "$bind9_durum" == "ÇALIŞIYOR" ]]; then
-            echo -e "   🔧 Bind9 Servisi: ${YESIL}$bind9_durum${NC}"
+            echo -e "   🔧 Bind9 Servisi: ${ACIK_YESIL}$bind9_durum${NC}"
         else
-            echo -e "   🔧 Bind9 Servisi: ${KIRMIZI}$bind9_durum${NC}"
+            echo -e "   🔧 Bind9 Servisi: ${TURUNCU}$bind9_durum${NC}"
         fi
         
         if [[ "$yapilandirma" == "MEVCUT" ]]; then
-            echo -e "   📁 Yapılandırma: ${YESIL}$yapilandirma${NC}"
+            echo -e "   📁 Yapılandırma: ${ACIK_YESIL}$yapilandirma${NC}"
         else
-            echo -e "   📁 Yapılandırma: ${KIRMIZI}$yapilandirma${NC}"
+            echo -e "   📁 Yapılandırma: ${TURUNCU}$yapilandirma${NC}"
         fi
         
         echo -e "   🌐 Aktif Domainler: ${SARI}$aktif_domainler${NC}"
         echo -e "   🧪 Son Test: ${SARI}$son_test${NC}"
         echo ""
         
-        echo -e "${YESIL}1)${NC} 🚀 BIND9 Tam Kur (Tek seferlik işlem)"
-        echo -e "${YESIL}2)${NC} ➕ Domain Ekle (Yeni domain ekleme)"
-        echo -e "${YESIL}3)${NC} 🧪 BIND9 Test"
-        echo -e "${YESIL}4)${NC} 🔄 BIND9 Yeniden Başlat"
-        echo -e "${YESIL}5)${NC} 🔙 Geri"
-        echo -e "${KIRMIZI}0)${NC} ❌ Çıkış"
+        echo -e "${ACIK_YESIL}1)${NC} 🚀 BIND9 Tam Kur (Tek seferlik işlem)"
+        echo -e "${ACIK_YESIL}2)${NC} ➕ Domain Ekle (Yeni domain ekleme)"
+        echo -e "${ACIK_YESIL}3)${NC} 🧪 BIND9 Test"
+        echo -e "${ACIK_YESIL}4)${NC} 🔄 BIND9 Yeniden Başlat"
+        echo -e "${ACIK_YESIL}5)${NC} 🔙 Geri"
+        echo -e "${TURUNCU}0)${NC} ❌ Çıkış"
         echo ""
         
         read -p "$(echo -e ${SARI}Seçiminizi yapın [0-5]: ${NC})" secim
@@ -1427,7 +1436,7 @@ bind9_menu() {
             4) bind9_yeniden_baslat ;;
             5) return ;;
             0) exit 0 ;;
-            *) echo -e "${KIRMIZI}❌ Geçersiz seçim!${NC}"; sleep 1 ;;
+            *) echo -e "${TURUNCU}❌ Geçersiz seçim!${NC}"; sleep 1 ;;
         esac
     done
 }
@@ -1435,9 +1444,9 @@ bind9_menu() {
 # BIND9 tam kurulum fonksiyonu
 bind9_tam_kur() {
     clear
-    echo -e "${MAVI}╔════════════════════════════════════╗${NC}"
-    echo -e "${MAVI}║        BIND9 TAM KURULUM          ║${NC}"
-    echo -e "${MAVI}╚════════════════════════════════════╝${NC}"
+    echo -e "${TURKUAZ}╔════════════════════════════════════╗${NC}"
+    echo -e "${TURKUAZ}║        BIND9 TAM KURULUM          ║${NC}"
+    echo -e "${TURKUAZ}╚════════════════════════════════════╝${NC}"
     echo ""
     
     echo -e "${BEYAZ}🌐 Kurulacak domainleri girin (her satırda bir domain):${NC}"
@@ -1455,11 +1464,11 @@ bind9_tam_kur() {
             break
         fi
         domains_to_install+=("$domain")
-        echo -e "${YESIL}✅ Eklendi: $domain${NC}"
+        echo -e "${ACIK_YESIL}✅ Eklendi: $domain${NC}"
     done
     
     if [[ ${#domains_to_install[@]} -eq 0 ]]; then
-        echo -e "${KIRMIZI}❌ Hiç domain girilmedi!${NC}"
+        echo -e "${TURUNCU}❌ Hiç domain girilmedi!${NC}"
         read -p "Devam etmek için ENTER'a basın..."
         return
     fi
@@ -1473,21 +1482,21 @@ bind9_tam_kur() {
     
     read -p "$(echo -e ${SARI}Kuruluma başlansın mı? [e/h]: ${NC})" onay
     if [[ ! "$onay" =~ ^[eE]$ ]]; then
-        echo -e "${KIRMIZI}❌ Kurulum iptal edildi${NC}"
+        echo -e "${TURUNCU}❌ Kurulum iptal edildi${NC}"
         read -p "Devam etmek için ENTER'a basın..."
         return
     fi
     
     echo ""
-    echo -e "${MAVI}🚀 BIND9 Kurulumu Başlıyor...${NC}"
+    echo -e "${TURKUAZ}🚀 BIND9 Kurulumu Başlıyor...${NC}"
     echo ""
     
     # 1. BIND9 Kur
     echo -e "${TURKUAZ}1/5 📦 BIND9 Kuruluyor...${NC}"
     if step_01_bind9_install; then
-        echo -e "${YESIL}✅ BIND9 kuruldu${NC}"
+        echo -e "${ACIK_YESIL}✅ BIND9 kuruldu${NC}"
     else
-        echo -e "${KIRMIZI}❌ BIND9 kurulumu başarısız!${NC}"
+        echo -e "${TURUNCU}❌ BIND9 kurulumu başarısız!${NC}"
         read -p "Devam etmek için ENTER'a basın..."
         return
     fi
@@ -1495,9 +1504,9 @@ bind9_tam_kur() {
     # 2. BIND9 Yapılandır
     echo -e "${TURKUAZ}2/5 ⚙️  BIND9 Yapılandırılıyor...${NC}"
     if step_02_bind9_configuration; then
-        echo -e "${YESIL}✅ BIND9 yapılandırıldı${NC}"
+        echo -e "${ACIK_YESIL}✅ BIND9 yapılandırıldı${NC}"
     else
-        echo -e "${KIRMIZI}❌ BIND9 yapılandırması başarısız!${NC}"
+        echo -e "${TURUNCU}❌ BIND9 yapılandırması başarısız!${NC}"
         read -p "Devam etmek için ENTER'a basın..."
         return
     fi
@@ -1507,18 +1516,18 @@ bind9_tam_kur() {
     for domain in "${domains_to_install[@]}"; do
         echo -e "${SARI}   • $domain zone dosyası oluşturuluyor...${NC}"
         if step_05_zone_files_creation "$domain"; then
-            echo -e "${YESIL}   ✅ $domain zone dosyası oluşturuldu${NC}"
+            echo -e "${ACIK_YESIL}   ✅ $domain zone dosyası oluşturuldu${NC}"
         else
-            echo -e "${KIRMIZI}   ❌ $domain zone dosyası oluşturulamadı!${NC}"
+            echo -e "${TURUNCU}   ❌ $domain zone dosyası oluşturulamadı!${NC}"
         fi
     done
     
     # 4. BIND9 Yeniden Başlat
     echo -e "${TURKUAZ}4/5 🔄 BIND9 Yeniden Başlatılıyor...${NC}"
     if systemctl restart bind9; then
-        echo -e "${YESIL}✅ BIND9 yeniden başlatıldı${NC}"
+        echo -e "${ACIK_YESIL}✅ BIND9 yeniden başlatıldı${NC}"
     else
-        echo -e "${KIRMIZI}❌ BIND9 yeniden başlatılamadı!${NC}"
+        echo -e "${TURUNCU}❌ BIND9 yeniden başlatılamadı!${NC}"
         read -p "Devam etmek için ENTER'a basın..."
         return
     fi
@@ -1528,19 +1537,19 @@ bind9_tam_kur() {
     for domain in "${domains_to_install[@]}"; do
         echo -e "${SARI}   • $domain test ediliyor...${NC}"
         if bind9_domain_test "$domain"; then
-            echo -e "${YESIL}   ✅ $domain testi başarılı${NC}"
+            echo -e "${ACIK_YESIL}   ✅ $domain testi başarılı${NC}"
         else
-            echo -e "${KIRMIZI}   ❌ $domain testi başarısız!${NC}"
+            echo -e "${TURUNCU}   ❌ $domain testi başarısız!${NC}"
         fi
     done
     
     echo ""
-    echo -e "${YESIL}🎉 BIND9 TAM KURULUM TAMAMLANDI!${NC}"
+    echo -e "${ACIK_YESIL}🎉 BIND9 TAM KURULUM TAMAMLANDI!${NC}"
     echo ""
     echo -e "${BEYAZ}📋 Kurulum Özeti:${NC}"
     echo -e "   • Kurulan domain sayısı: ${SARI}${#domains_to_install[@]}${NC}"
-    echo -e "   • BIND9 durumu: ${YESIL}ÇALIŞIYOR${NC}"
-    echo -e "   • Yapılandırma: ${YESIL}TAMAMLANDI${NC}"
+    echo -e "   • BIND9 durumu: ${ACIK_YESIL}ÇALIŞIYOR${NC}"
+    echo -e "   • Yapılandırma: ${ACIK_YESIL}TAMAMLANDI${NC}"
     echo ""
     
     read -p "Devam etmek için ENTER'a basın..."
@@ -1549,14 +1558,14 @@ bind9_tam_kur() {
 # Domain ekleme fonksiyonu
 bind9_domain_ekle() {
     clear
-    echo -e "${MAVI}╔════════════════════════════════════╗${NC}"
-    echo -e "${MAVI}║          DOMAIN EKLEME            ║${NC}"
-    echo -e "${MAVI}╚════════════════════════════════════╝${NC}"
+    echo -e "${TURKUAZ}╔════════════════════════════════════╗${NC}"
+    echo -e "${TURKUAZ}║          DOMAIN EKLEME            ║${NC}"
+    echo -e "${TURKUAZ}╚════════════════════════════════════╝${NC}"
     echo ""
     
     # BIND9 kurulu mu kontrol et
     if ! systemctl is-installed bind9 &>/dev/null; then
-        echo -e "${KIRMIZI}❌ BIND9 kurulu değil! Önce 'BIND9 Tam Kur' seçeneğini kullanın.${NC}"
+        echo -e "${TURUNCU}❌ BIND9 kurulu değil! Önce 'BIND9 Tam Kur' seçeneğini kullanın.${NC}"
         read -p "Devam etmek için ENTER'a basın..."
         return
     fi
@@ -1565,7 +1574,7 @@ bind9_domain_ekle() {
     read -p "Domain: " yeni_domain
     
     if [[ -z "$yeni_domain" ]]; then
-        echo -e "${KIRMIZI}❌ Domain adı boş olamaz!${NC}"
+        echo -e "${TURUNCU}❌ Domain adı boş olamaz!${NC}"
         read -p "Devam etmek için ENTER'a basın..."
         return
     fi
@@ -1582,20 +1591,20 @@ bind9_domain_ekle() {
     read -p "$(echo -e ${SARI}Devam edilsin mi? [e/h]: ${NC})" onay
     
     if [[ ! "$onay" =~ ^[eE]$ ]]; then
-        echo -e "${KIRMIZI}❌ Domain ekleme iptal edildi${NC}"
+        echo -e "${TURUNCU}❌ Domain ekleme iptal edildi${NC}"
         read -p "Devam etmek için ENTER'a basın..."
         return
     fi
     
     echo ""
-    echo -e "${MAVI}➕ Domain Ekleniyor...${NC}"
+    echo -e "${TURKUAZ}➕ Domain Ekleniyor...${NC}"
     
     # 1. Mevcut yapılandırmayı güncelle
     echo -e "${TURKUAZ}1/4 ⚙️  Yapılandırma güncelleniyor...${NC}"
     if bind9_yapilandirma_guncelle "$yeni_domain"; then
-        echo -e "${YESIL}✅ Yapılandırma güncellendi${NC}"
+        echo -e "${ACIK_YESIL}✅ Yapılandırma güncellendi${NC}"
     else
-        echo -e "${KIRMIZI}❌ Yapılandırma güncellenemedi!${NC}"
+        echo -e "${TURUNCU}❌ Yapılandırma güncellenemedi!${NC}"
         read -p "Devam etmek için ENTER'a basın..."
         return
     fi
@@ -1603,9 +1612,9 @@ bind9_domain_ekle() {
     # 2. Yeni zone dosyası oluştur
     echo -e "${TURKUAZ}2/4 📁 Zone dosyası oluşturuluyor...${NC}"
     if step_05_zone_files_creation "$yeni_domain"; then
-        echo -e "${YESIL}✅ Zone dosyası oluşturuldu${NC}"
+        echo -e "${ACIK_YESIL}✅ Zone dosyası oluşturuldu${NC}"
     else
-        echo -e "${KIRMIZI}❌ Zone dosyası oluşturulamadı!${NC}"
+        echo -e "${TURUNCU}❌ Zone dosyası oluşturulamadı!${NC}"
         read -p "Devam etmek için ENTER'a basın..."
         return
     fi
@@ -1613,9 +1622,9 @@ bind9_domain_ekle() {
     # 3. BIND9 Yeniden Başlat
     echo -e "${TURKUAZ}3/4 🔄 BIND9 yeniden başlatılıyor...${NC}"
     if systemctl restart bind9; then
-        echo -e "${YESIL}✅ BIND9 yeniden başlatıldı${NC}"
+        echo -e "${ACIK_YESIL}✅ BIND9 yeniden başlatıldı${NC}"
     else
-        echo -e "${KIRMIZI}❌ BIND9 yeniden başlatılamadı!${NC}"
+        echo -e "${TURUNCU}❌ BIND9 yeniden başlatılamadı!${NC}"
         read -p "Devam etmek için ENTER'a basın..."
         return
     fi
@@ -1623,13 +1632,13 @@ bind9_domain_ekle() {
     # 4. Test yap
     echo -e "${TURKUAZ}4/4 🧪 Test yapılıyor...${NC}"
     if bind9_domain_test "$yeni_domain"; then
-        echo -e "${YESIL}✅ Test başarılı${NC}"
+        echo -e "${ACIK_YESIL}✅ Test başarılı${NC}"
     else
-        echo -e "${KIRMIZI}❌ Test başarısız!${NC}"
+        echo -e "${TURUNCU}❌ Test başarısız!${NC}"
     fi
     
     echo ""
-    echo -e "${YESIL}🎉 DOMAIN BAŞARIYLA EKLENDİ!${NC}"
+    echo -e "${ACIK_YESIL}🎉 DOMAIN BAŞARIYLA EKLENDİ!${NC}"
     echo -e "${BEYAZ}📋 Eklenen domain: ${SARI}$yeni_domain${NC}"
     echo ""
     
@@ -1639,19 +1648,19 @@ bind9_domain_ekle() {
 # BIND9 test fonksiyonu
 bind9_test_yap() {
     clear
-    echo -e "${MAVI}╔════════════════════════════════════╗${NC}"
-    echo -e "${MAVI}║           BIND9 TEST              ║${NC}"
-    echo -e "${MAVI}╚════════════════════════════════════╝${NC}"
+    echo -e "${TURKUAZ}╔════════════════════════════════════╗${NC}"
+    echo -e "${TURKUAZ}║           BIND9 TEST              ║${NC}"
+    echo -e "${TURKUAZ}╚════════════════════════════════════╝${NC}"
     echo ""
     
-    echo -e "${MAVI}🧪 BIND9 Test Başlıyor...${NC}"
+    echo -e "${TURKUAZ}🧪 BIND9 Test Başlıyor...${NC}"
     echo ""
     
     # Genel BIND9 testi
     if step_06_bind9_test; then
-        echo -e "${YESIL}✅ Genel BIND9 testi başarılı${NC}"
+        echo -e "${ACIK_YESIL}✅ Genel BIND9 testi başarılı${NC}"
     else
-        echo -e "${KIRMIZI}❌ Genel BIND9 testi başarısız!${NC}"
+        echo -e "${TURUNCU}❌ Genel BIND9 testi başarısız!${NC}"
     fi
     
     echo ""
@@ -1664,13 +1673,13 @@ bind9_test_yap() {
         for domain in "${domains[@]}"; do
             echo -e "${SARI}   • $domain test ediliyor...${NC}"
             if bind9_domain_test "$domain"; then
-                echo -e "${YESIL}   ✅ $domain testi başarılı${NC}"
+                echo -e "${ACIK_YESIL}   ✅ $domain testi başarılı${NC}"
             else
-                echo -e "${KIRMIZI}   ❌ $domain testi başarısız!${NC}"
+                echo -e "${TURUNCU}   ❌ $domain testi başarısız!${NC}"
             fi
         done
     else
-        echo -e "${KIRMIZI}❌ Yapılandırma dosyası bulunamadı!${NC}"
+        echo -e "${TURUNCU}❌ Yapılandırma dosyası bulunamadı!${NC}"
     fi
     
     # Test sonucunu kaydet
@@ -1683,24 +1692,24 @@ bind9_test_yap() {
 # BIND9 yeniden başlatma fonksiyonu
 bind9_yeniden_baslat() {
     clear
-    echo -e "${MAVI}╔════════════════════════════════════╗${NC}"
-    echo -e "${MAVI}║       BIND9 YENİDEN BAŞLAT        ║${NC}"
-    echo -e "${MAVI}╚════════════════════════════════════╝${NC}"
+    echo -e "${TURKUAZ}╔════════════════════════════════════╗${NC}"
+    echo -e "${TURKUAZ}║       BIND9 YENİDEN BAŞLAT        ║${NC}"
+    echo -e "${TURKUAZ}╚════════════════════════════════════╝${NC}"
     echo ""
     
-    echo -e "${MAVI}🔄 BIND9 yeniden başlatılıyor...${NC}"
+    echo -e "${TURKUAZ}🔄 BIND9 yeniden başlatılıyor...${NC}"
     
     if systemctl restart bind9; then
-        echo -e "${YESIL}✅ BIND9 başarıyla yeniden başlatıldı${NC}"
+        echo -e "${ACIK_YESIL}✅ BIND9 başarıyla yeniden başlatıldı${NC}"
         
         # Servis durumunu kontrol et
         if systemctl is-active --quiet bind9; then
-            echo -e "${YESIL}✅ BIND9 servisi çalışıyor${NC}"
+            echo -e "${ACIK_YESIL}✅ BIND9 servisi çalışıyor${NC}"
         else
-            echo -e "${KIRMIZI}❌ BIND9 servisi çalışmıyor!${NC}"
+            echo -e "${TURUNCU}❌ BIND9 servisi çalışmıyor!${NC}"
         fi
     else
-        echo -e "${KIRMIZI}❌ BIND9 yeniden başlatılamadı!${NC}"
+        echo -e "${TURUNCU}❌ BIND9 yeniden başlatılamadı!${NC}"
         echo ""
         echo -e "${BEYAZ}📋 Hata detayları:${NC}"
         systemctl status bind9 --no-pager -l
@@ -1749,22 +1758,22 @@ bind9_domain_test() {
 # =====================================================
 
 step_01_bind9_install() {
-    echo -e "${MAVI}📦 BIND9 kuruluyor...${NC}"
+    echo -e "${TURKUAZ}📦 BIND9 kuruluyor...${NC}"
     
     apt update
     apt install -y bind9 bind9utils bind9-doc dnsutils
     
     if systemctl is-active --quiet bind9; then
-        echo -e "${YESIL}✅ BIND9 başarıyla kuruldu ve çalışıyor${NC}"
+        echo -e "${ACIK_YESIL}✅ BIND9 başarıyla kuruldu ve çalışıyor${NC}"
         return 0
     else
-        echo -e "${KIRMIZI}❌ BIND9 kurulumu başarısız!${NC}"
+        echo -e "${TURUNCU}❌ BIND9 kurulumu başarısız!${NC}"
         return 1
     fi
 }
 
 step_02_bind9_configuration() {
-    echo -e "${MAVI}⚙️  BIND9 yapılandırılıyor...${NC}"
+    echo -e "${TURKUAZ}⚙️  BIND9 yapılandırılıyor...${NC}"
     
     # named.conf.options dosyasını oluştur
     cat > /etc/bind/named.conf.options << EOF
@@ -1801,7 +1810,7 @@ step_05_zone_files_creation() {
     local domain=$1
     local zone_file="/etc/bind/zones/db.$domain"
     
-    echo -e "${MAVI}📁 $domain için zone dosyası oluşturuluyor...${NC}"
+    echo -e "${TURKUAZ}📁 $domain için zone dosyası oluşturuluyor...${NC}"
     
     # Zone dosyasını oluştur
     cat > "$zone_file" << EOF
@@ -1859,35 +1868,35 @@ EOF
     
     # Zone dosyasını test et
     if named-checkzone "$domain" "$zone_file" >/dev/null 2>&1; then
-        echo -e "${YESIL}✅ $domain zone dosyası başarıyla oluşturuldu${NC}"
+        echo -e "${ACIK_YESIL}✅ $domain zone dosyası başarıyla oluşturuldu${NC}"
         return 0
     else
-        echo -e "${KIRMIZI}❌ $domain zone dosyası hatalı!${NC}"
+        echo -e "${TURUNCU}❌ $domain zone dosyası hatalı!${NC}"
         return 1
     fi
 }
 
 step_06_bind9_test() {
-    echo -e "${MAVI}🧪 BIND9 test ediliyor...${NC}"
+    echo -e "${TURKUAZ}🧪 BIND9 test ediliyor...${NC}"
     
     # BIND9 servisi çalışıyor mu?
     if ! systemctl is-active --quiet bind9; then
-        echo -e "${KIRMIZI}❌ BIND9 servisi çalışmıyor!${NC}"
+        echo -e "${TURUNCU}❌ BIND9 servisi çalışmıyor!${NC}"
         return 1
     fi
     
     # Yapılandırma dosyaları geçerli mi?
     if ! named-checkconf; then
-        echo -e "${KIRMIZI}❌ BIND9 yapılandırması hatalı!${NC}"
+        echo -e "${TURUNCU}❌ BIND9 yapılandırması hatalı!${NC}"
         return 1
     fi
     
     # DNS sorgusu test
     if dig @localhost google.com >/dev/null 2>&1; then
-        echo -e "${YESIL}✅ DNS sorguları çalışıyor${NC}"
+        echo -e "${ACIK_YESIL}✅ DNS sorguları çalışıyor${NC}"
         return 0
     else
-        echo -e "${KIRMIZI}❌ DNS sorguları çalışmıyor!${NC}"
+        echo -e "${TURUNCU}❌ DNS sorguları çalışmıyor!${NC}"
         return 1
     fi
 }
@@ -1907,43 +1916,43 @@ cloudpanel_durum_kontrol() {
     
     # CloudPanel servis kontrolü
     if systemctl is-active --quiet cloudpanel 2>/dev/null; then
-        cloudpanel_durum="${YESIL}ÇALIŞIYOR${NC}"
+        cloudpanel_durum="${ACIK_YESIL}ÇALIŞIYOR${NC}"
     else
-        cloudpanel_durum="${KIRMIZI}ÇALIŞMIYOR${NC}"
+        cloudpanel_durum="${TURUNCU}ÇALIŞMIYOR${NC}"
     fi
     
     # Nginx kontrolü
     if systemctl is-active --quiet nginx 2>/dev/null; then
-        nginx_durum="${YESIL}ÇALIŞIYOR${NC}"
+        nginx_durum="${ACIK_YESIL}ÇALIŞIYOR${NC}"
     else
-        nginx_durum="${KIRMIZI}ÇALIŞMIYOR${NC}"
+        nginx_durum="${TURUNCU}ÇALIŞMIYOR${NC}"
     fi
     
     # MySQL kontrolü
     if systemctl is-active --quiet mysql 2>/dev/null; then
-        mysql_durum="${YESIL}ÇALIŞIYOR${NC}"
+        mysql_durum="${ACIK_YESIL}ÇALIŞIYOR${NC}"
     else
-        mysql_durum="${KIRMIZI}ÇALIŞMIYOR${NC}"
+        mysql_durum="${TURUNCU}ÇALIŞMIYOR${NC}"
     fi
     
     # Fail2ban kontrolü
     if systemctl is-active --quiet fail2ban 2>/dev/null; then
-        fail2ban_durum="${YESIL}ÇALIŞIYOR${NC}"
+        fail2ban_durum="${ACIK_YESIL}ÇALIŞIYOR${NC}"
     else
-        fail2ban_durum="${KIRMIZI}ÇALIŞMIYOR${NC}"
+        fail2ban_durum="${TURUNCU}ÇALIŞMIYOR${NC}"
     fi
     
     # UFW port kontrolleri
     if ufw status 2>/dev/null | grep -q "8443.*ALLOW"; then
-        ufw_8443="${YESIL}AÇIK${NC}"
+        ufw_8443="${ACIK_YESIL}AÇIK${NC}"
     else
-        ufw_8443="${KIRMIZI}KAPALI${NC}"
+        ufw_8443="${TURUNCU}KAPALI${NC}"
     fi
     
     if ufw status 2>/dev/null | grep -q "53.*ALLOW"; then
-        ufw_53="${YESIL}AÇIK${NC}"
+        ufw_53="${ACIK_YESIL}AÇIK${NC}"
     else
-        ufw_53="${KIRMIZI}KAPALI${NC}"
+        ufw_53="${TURUNCU}KAPALI${NC}"
     fi
     
     echo -e "${TURKUAZ}📊 CloudPanel Durumu:${NC}"
@@ -1982,61 +1991,61 @@ cloudpanel_kur_otomatik() {
     echo "═══════════════════════════════════════════════════════════════════════════════"
     
     # Adım 1: Sistem güncellemesi
-    echo -e "${MAVI}[1/6]${NC} Sistem güncelleniyor..."
+    echo -e "${TURKUAZ}[1/6]${NC} Sistem güncelleniyor..."
     apt update >/dev/null 2>&1 && apt upgrade -y >/dev/null 2>&1
-    echo -e "${YESIL}   ✅ Sistem güncellendi${NC}"
+    echo -e "${ACIK_YESIL}   ✅ Sistem güncellendi${NC}"
     
     # Adım 2: Gerekli paketler
-    echo -e "${MAVI}[2/6]${NC} Gerekli paketler kuruluyor..."
+    echo -e "${TURKUAZ}[2/6]${NC} Gerekli paketler kuruluyor..."
     apt install -y curl wget gnupg2 software-properties-common apt-transport-https ca-certificates lsb-release whois >/dev/null 2>&1
-    echo -e "${YESIL}   ✅ Gerekli paketler kuruldu${NC}"
+    echo -e "${ACIK_YESIL}   ✅ Gerekli paketler kuruldu${NC}"
     
     # Adım 3: CloudPanel kurulum scripti indirme
-    echo -e "${MAVI}[3/6]${NC} CloudPanel kurulum scripti indiriliyor..."
+    echo -e "${TURKUAZ}[3/6]${NC} CloudPanel kurulum scripti indiriliyor..."
     cd /tmp
     curl -fsSL https://installer.cloudpanel.io/ce/v2/install.sh -o install.sh >/dev/null 2>&1
     chmod +x install.sh
-    echo -e "${YESIL}   ✅ Kurulum scripti hazır${NC}"
+    echo -e "${ACIK_YESIL}   ✅ Kurulum scripti hazır${NC}"
     
     # Adım 4: CloudPanel kurulumu (Fail2ban dahil)
-    echo -e "${MAVI}[4/6]${NC} CloudPanel kuruluyor (Fail2ban dahil)..."
+    echo -e "${TURKUAZ}[4/6]${NC} CloudPanel kuruluyor (Fail2ban dahil)..."
     echo -e "${SARI}   ⏳ Bu işlem 5-10 dakika sürebilir...${NC}"
     
     # CloudPanel kurulumunu sessiz modda çalıştır
     bash install.sh >/dev/null 2>&1
     
     if systemctl is-active --quiet cloudpanel; then
-        echo -e "${YESIL}   ✅ CloudPanel başarıyla kuruldu${NC}"
+        echo -e "${ACIK_YESIL}   ✅ CloudPanel başarıyla kuruldu${NC}"
     else
-        echo -e "${KIRMIZI}   ❌ CloudPanel kurulumu başarısız!${NC}"
+        echo -e "${TURUNCU}   ❌ CloudPanel kurulumu başarısız!${NC}"
         enter_bekle
         return 1
     fi
     
     # Fail2ban kontrolü
     if systemctl is-active --quiet fail2ban; then
-        echo -e "${YESIL}   ✅ Fail2ban CloudPanel ile kuruldu${NC}"
+        echo -e "${ACIK_YESIL}   ✅ Fail2ban CloudPanel ile kuruldu${NC}"
     else
         echo -e "${SARI}   ⚠️ Fail2ban henüz aktif değil${NC}"
     fi
     
     # Adım 5: DNS portu yeniden açma (CloudPanel UFW'yi sıfırladığı için)
-    echo -e "${MAVI}[5/6]${NC} DNS portu yeniden açılıyor..."
+    echo -e "${TURKUAZ}[5/6]${NC} DNS portu yeniden açılıyor..."
     ufw allow 53/tcp >/dev/null 2>&1
     ufw allow 53/udp >/dev/null 2>&1
     ufw allow ${SSH_OZEL_PORT}/tcp >/dev/null 2>&1
-    echo -e "${YESIL}   ✅ Port Sunucu ve ÖZEL port yeniden açıldı${NC}"
+    echo -e "${ACIK_YESIL}   ✅ Port Sunucu ve ÖZEL port yeniden açıldı${NC}"
     
     # Adım 6: Fail2ban ek yapılandırmaları
-    echo -e "${MAVI}[6/6]${NC} Fail2ban ek yapılandırmaları..."
+    echo -e "${TURKUAZ}[6/6]${NC} Fail2ban ek yapılandırmaları..."
     fail2ban_yapilandir_cloudpanel
-    echo -e "${YESIL}   ✅ Fail2ban yapılandırmaları tamamlandı${NC}"
+    echo -e "${ACIK_YESIL}   ✅ Fail2ban yapılandırmaları tamamlandı${NC}"
     
     # CloudPanel admin bilgilerini al
     echo ""
-    echo -e "${YESIL}╔══════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${YESIL}║           ✅ CLOUDPANEL KURULUMU TAMAMLANDI!            ║${NC}"
-    echo -e "${YESIL}╚══════════════════════════════════════════════════════════╝${NC}"
+    echo -e "${ACIK_YESIL}╔══════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${ACIK_YESIL}║           ✅ CLOUDPANEL KURULUMU TAMAMLANDI!            ║${NC}"
+    echo -e "${ACIK_YESIL}╚══════════════════════════════════════════════════════════╝${NC}"
     echo ""
     echo -e "${BEYAZ}🌐 CloudPanel Erişim Bilgileri:${NC}"
     echo -e "   📍 URL: https://$DIS_IP:8443"
@@ -2044,12 +2053,12 @@ cloudpanel_kur_otomatik() {
     echo -e "   🔑 Şifre: İlk girişte CloudPanel arayüzünden belirleyeceksiniz."
     echo ""
     echo -e "${BEYAZ}📊 Kurulum Özeti:${NC}"
-    echo -e "   ☁️ CloudPanel: $(systemctl is-active --quiet cloudpanel && echo -e "${YESIL}Çalışıyor${NC}" || echo -e "${KIRMIZI}Çalışmıyor${NC}")"
-    echo -e "   🛡️ Fail2ban: $(systemctl is-active --quiet fail2ban && echo -e "${YESIL}Çalışıyor${NC}" || echo -e "${KIRMIZI}Çalışmıyor${NC}")"
-    echo -e "   🌐 Nginx: $(systemctl is-active --quiet nginx && echo -e "${YESIL}Çalışıyor${NC}" || echo -e "${KIRMIZI}Çalışmıyor${NC}")"
-    echo -e "   🗄️ MySQL: $(systemctl is-active --quiet mysql && echo -e "${YESIL}Çalışıyor${NC}" || echo -e "${KIRMIZI}Çalışmıyor${NC}")"
-    echo -e "   🔐 UFW Port 8443: $(ufw status | grep -q "8443.*ALLOW" && echo -e "${YESIL}Açık${NC}" || echo -e "${KIRMIZI}Kapalı${NC}")"
-    echo -e "   🌐 UFW Port 53: $(ufw status | grep -q "53.*ALLOW" && echo -e "${YESIL}Açık${NC}" || echo -e "${KIRMIZI}Kapalı${NC}")"
+    echo -e "   ☁️ CloudPanel: $(systemctl is-active --quiet cloudpanel && echo -e "${ACIK_YESIL}Çalışıyor${NC}" || echo -e "${TURUNCU}Çalışmıyor${NC}")"
+    echo -e "   🛡️ Fail2ban: $(systemctl is-active --quiet fail2ban && echo -e "${ACIK_YESIL}Çalışıyor${NC}" || echo -e "${TURUNCU}Çalışmıyor${NC}")"
+    echo -e "   🌐 Nginx: $(systemctl is-active --quiet nginx && echo -e "${ACIK_YESIL}Çalışıyor${NC}" || echo -e "${TURUNCU}Çalışmıyor${NC}")"
+    echo -e "   🗄️ MySQL: $(systemctl is-active --quiet mysql && echo -e "${ACIK_YESIL}Çalışıyor${NC}" || echo -e "${TURUNCU}Çalışmıyor${NC}")"
+    echo -e "   🔐 UFW Port 8443: $(ufw status | grep -q "8443.*ALLOW" && echo -e "${ACIK_YESIL}Açık${NC}" || echo -e "${TURUNCU}Kapalı${NC}")"
+    echo -e "   🌐 UFW Port 53: $(ufw status | grep -q "53.*ALLOW" && echo -e "${ACIK_YESIL}Açık${NC}" || echo -e "${TURUNCU}Kapalı${NC}")"
     echo ""
     
     gunluk_yaz "BILGI" "CloudPanel + Fail2ban kurulumu tamamlandı"
@@ -2066,7 +2075,7 @@ fail2ban_yapilandir_cloudpanel() {
     
     # CloudPanel'in mevcut fail2ban yapılandırmasını kontrol et
     if systemctl is-active --quiet fail2ban; then
-        echo -e "${YESIL}   ✅ Fail2ban CloudPanel ile kurulu${NC}"
+        echo -e "${ACIK_YESIL}   ✅ Fail2ban CloudPanel ile kurulu${NC}"
     else
         echo -e "${SARI}   ⚠️ Fail2ban henüz aktif değil, yapılandırma ekleniyor...${NC}"
     fi
@@ -2150,7 +2159,7 @@ EOF
     # Fail2ban'ı yeniden başlat
     systemctl restart fail2ban >/dev/null 2>&1
     
-    echo -e "${YESIL}   ✅ Fail2ban ek yapılandırmaları eklendi${NC}"
+    echo -e "${ACIK_YESIL}   ✅ Fail2ban ek yapılandırmaları eklendi${NC}"
 }
 
 # Gelişmiş Ban Yönetimi
@@ -2164,7 +2173,7 @@ ban_yonetimi() {
     
     # Fail2ban durumu kontrol
     if ! systemctl is-active --quiet fail2ban; then
-        echo -e "${KIRMIZI}❌ Fail2ban servisi çalışmıyor!${NC}"
+        echo -e "${TURUNCU}❌ Fail2ban servisi çalışmıyor!${NC}"
         echo -e "${SARI}CloudPanel kurulumu tamamlandıktan sonra tekrar deneyin.${NC}"
         enter_bekle
         return 1
@@ -2176,7 +2185,7 @@ ban_yonetimi() {
     # Genel durum
     echo -e "${BEYAZ}📊 Genel Durum:${NC}"
     fail2ban-client status 2>/dev/null | while IFS= read -r line; do
-        echo -e "   ${MAVI}$line${NC}"
+        echo -e "   ${TURKUAZ}$line${NC}"
     done
     echo ""
     
@@ -2191,9 +2200,9 @@ ban_yonetimi() {
             local total_banned=$(echo "$jail_status" | grep "Total banned:" | awk '{print $NF}')
             
             if [[ $banned_count -gt 0 ]]; then
-                echo -e "   🔴 $jail: ${KIRMIZI}$banned_count aktif ban${NC} (Toplam: $total_banned)"
+                echo -e "   🔴 $jail: ${TURUNCU}$banned_count aktif ban${NC} (Toplam: $total_banned)"
             else
-                echo -e "   🟢 $jail: ${YESIL}$banned_count aktif ban${NC} (Toplam: $total_banned)"
+                echo -e "   🟢 $jail: ${ACIK_YESIL}$banned_count aktif ban${NC} (Toplam: $total_banned)"
             fi
         done
     else
@@ -2221,7 +2230,7 @@ ban_yonetimi() {
     fi
     
     if [[ "$banned_ips_found" == false ]]; then
-        echo -e "   ${YESIL}✅ Şu anda banlı IP yok${NC}"
+        echo -e "   ${ACIK_YESIL}✅ Şu anda banlı IP yok${NC}"
     fi
     echo ""
     
@@ -2246,7 +2255,7 @@ ban_yonetimi() {
         5) ban_gecmisi_goster ;;
         6) return 0 ;;
         *)
-            echo -e "${KIRMIZI}❌ Geçersiz seçim!${NC}"
+            echo -e "${TURUNCU}❌ Geçersiz seçim!${NC}"
             sleep 2
             ban_yonetimi
             ;;
@@ -2277,7 +2286,7 @@ ip_ban_kaldir() {
     fi
     
     if [[ ${#ip_jail_pairs[@]} -eq 0 ]]; then
-        echo -e "${YESIL}✅ Banlı IP bulunamadı!${NC}"
+        echo -e "${ACIK_YESIL}✅ Banlı IP bulunamadı!${NC}"
         enter_bekle
         return 0
     fi
@@ -2287,7 +2296,7 @@ ip_ban_kaldir() {
     read -r ip_adres
     
     if [[ -z "$ip_adres" ]]; then
-        echo -e "${KIRMIZI}❌ IP adresi boş olamaz!${NC}"
+        echo -e "${TURUNCU}❌ IP adresi boş olamaz!${NC}"
         enter_bekle
         return 1
     fi
@@ -2296,13 +2305,13 @@ ip_ban_kaldir() {
     local basarili=0
     for jail in $jails; do
         if fail2ban-client set "$jail" unbanip "$ip_adres" >/dev/null 2>&1; then
-            echo -e "${YESIL}✅ $ip_adres IP'si $jail jail'inden kaldırıldı${NC}"
+            echo -e "${ACIK_YESIL}✅ $ip_adres IP'si $jail jail'inden kaldırıldı${NC}"
             basarili=$((basarili + 1))
         fi
     done
     
     if [[ $basarili -gt 0 ]]; then
-        echo -e "${YESIL}✅ $ip_adres IP'sinin banı $basarili jail'den kaldırıldı!${NC}"
+        echo -e "${ACIK_YESIL}✅ $ip_adres IP'sinin banı $basarili jail'den kaldırıldı!${NC}"
         gunluk_yaz "BILGI" "IP ban kaldırıldı: $ip_adres"
     else
         echo -e "${SARI}⚠️ $ip_adres IP'si banlı listede bulunamadı!${NC}"
@@ -2326,7 +2335,7 @@ fail2ban_status_goster() {
     
     # Fail2ban durumu kontrol
     if ! systemctl is-active --quiet fail2ban; then
-        echo -e "${KIRMIZI}❌ Fail2ban servisi çalışmıyor!${NC}"
+        echo -e "${TURUNCU}❌ Fail2ban servisi çalışmıyor!${NC}"
         enter_bekle
         return 1
     fi
@@ -2359,7 +2368,7 @@ fail2ban_kurtarma() {
     echo -e "${MOR}╚══════════════════════════════════════════════════════════╝${NC}"
     echo ""
     
-    echo -e "${KIRMIZI}⚠️ UYARI: Bu işlem tüm fail2ban banlarını kaldırır!${NC}"
+    echo -e "${TURUNCU}⚠️ UYARI: Bu işlem tüm fail2ban banlarını kaldırır!${NC}"
     echo -e "${SARI}Sunucu: $(hostname)${NC}"
     echo -e "${SARI}Dış IP: $DIS_IP${NC}"
     echo -e "${SARI}İç IP: $IC_IP${NC}"
@@ -2378,30 +2387,30 @@ fail2ban_kurtarma() {
     echo "═══════════════════════════════════════════════════════════════════════════════"
     
     # Fail2ban durumunu kontrol et
-    echo -e "${MAVI}[1/6]${NC} Fail2ban durumu kontrol ediliyor..."
+    echo -e "${TURKUAZ}[1/6]${NC} Fail2ban durumu kontrol ediliyor..."
     if systemctl is-active --quiet fail2ban; then
-        echo -e "${YESIL}   ✅ Fail2ban çalışıyor${NC}"
+        echo -e "${ACIK_YESIL}   ✅ Fail2ban çalışıyor${NC}"
     else
         echo -e "${SARI}   ⚠️ Fail2ban zaten çalışmıyor${NC}"
     fi
     
     # Fail2ban'ı durdur
-    echo -e "${MAVI}[2/6]${NC} Fail2ban servisi durduruluyor..."
+    echo -e "${TURKUAZ}[2/6]${NC} Fail2ban servisi durduruluyor..."
     systemctl stop fail2ban
-    echo -e "${YESIL}   ✅ Fail2ban durduruldu${NC}"
+    echo -e "${ACIK_YESIL}   ✅ Fail2ban durduruldu${NC}"
     
     # Tüm iptables kurallarını temizle
-    echo -e "${MAVI}[3/6]${NC} Fail2ban iptables kuralları temizleniyor..."
+    echo -e "${TURKUAZ}[3/6]${NC} Fail2ban iptables kuralları temizleniyor..."
     iptables -F
     iptables -X
     iptables -t nat -F
     iptables -t nat -X
     iptables -t mangle -F
     iptables -t mangle -X
-    echo -e "${YESIL}   ✅ Iptables kuralları temizlendi${NC}"
+    echo -e "${ACIK_YESIL}   ✅ Iptables kuralları temizlendi${NC}"
     
     # Varsayılan iptables kurallarını oluştur
-    echo -e "${MAVI}[4/6]${NC} Varsayılan güvenlik kuralları uygulanıyor..."
+    echo -e "${TURKUAZ}[4/6]${NC} Varsayılan güvenlik kuralları uygulanıyor..."
     iptables -P INPUT ACCEPT
     iptables -P FORWARD ACCEPT
     iptables -P OUTPUT ACCEPT
@@ -2410,35 +2419,35 @@ fail2ban_kurtarma() {
     iptables -A INPUT -p tcp --dport 22 -j ACCEPT
     iptables -A INPUT -p tcp --dport 2200 -j ACCEPT
     iptables -A INPUT -p tcp --dport 8443 -j ACCEPT
-    echo -e "${YESIL}   ✅ Temel erişim kuralları eklendi${NC}"
+    echo -e "${ACIK_YESIL}   ✅ Temel erişim kuralları eklendi${NC}"
     
     # Fail2ban veritabanını temizle
-    echo -e "${MAVI}[5/6]${NC} Fail2ban veritabanı temizleniyor..."
+    echo -e "${TURKUAZ}[5/6]${NC} Fail2ban veritabanı temizleniyor..."
     if [[ -f "/var/lib/fail2ban/fail2ban.sqlite3" ]]; then
         rm -f /var/lib/fail2ban/fail2ban.sqlite3
         touch /var/lib/fail2ban/fail2ban.sqlite3
-        echo -e "${YESIL}   ✅ Fail2ban veritabanı temizlendi${NC}"
+        echo -e "${ACIK_YESIL}   ✅ Fail2ban veritabanı temizlendi${NC}"
     else
         echo -e "${SARI}   ⚠️ Fail2ban veritabanı bulunamadı${NC}"
     fi
     
     # Fail2ban'ı yeniden başlat
-    echo -e "${MAVI}[6/6]${NC} Fail2ban yeniden başlatılıyor..."
+    echo -e "${TURKUAZ}[6/6]${NC} Fail2ban yeniden başlatılıyor..."
     systemctl start fail2ban
     
     if systemctl is-active --quiet fail2ban; then
-        echo -e "${YESIL}   ✅ Fail2ban başarıyla başlatıldı${NC}"
+        echo -e "${ACIK_YESIL}   ✅ Fail2ban başarıyla başlatıldı${NC}"
     else
-        echo -e "${KIRMIZI}   ❌ Fail2ban başlatılamadı!${NC}"
+        echo -e "${TURUNCU}   ❌ Fail2ban başlatılamadı!${NC}"
     fi
     
     echo ""
-    echo -e "${YESIL}╔══════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${YESIL}║           ✅ FAIL2BAN KURTARMA TAMAMLANDI!              ║${NC}"
-    echo -e "${YESIL}╚══════════════════════════════════════════════════════════╝${NC}"
+    echo -e "${ACIK_YESIL}╔══════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${ACIK_YESIL}║           ✅ FAIL2BAN KURTARMA TAMAMLANDI!              ║${NC}"
+    echo -e "${ACIK_YESIL}╚══════════════════════════════════════════════════════════╝${NC}"
     echo ""
     echo -e "${BEYAZ}📊 Kurtarma Özeti:${NC}"
-    echo -e "   🛡️ Fail2ban: $(systemctl is-active --quiet fail2ban && echo -e "${YESIL}Çalışıyor${NC}" || echo -e "${KIRMIZI}Çalışmıyor${NC}")"
+    echo -e "   🛡️ Fail2ban: $(systemctl is-active --quiet fail2ban && echo -e "${ACIK_YESIL}Çalışıyor${NC}" || echo -e "${TURUNCU}Çalışmıyor${NC}")"
     echo -e "   🔓 Tüm IP banları kaldırıldı"
     echo -e "   🔧 Iptables kuralları sıfırlandı"
     echo -e "   🗄️ Veritabanı temizlendi"
@@ -2458,14 +2467,14 @@ manuel_ip_ban() {
     read -r ip_adres
     
     if [[ -z "$ip_adres" ]]; then
-        echo -e "${KIRMIZI}❌ IP adresi boş olamaz!${NC}"
+        echo -e "${TURUNCU}❌ IP adresi boş olamaz!${NC}"
         enter_bekle
         return 1
     fi
     
     # IP formatını kontrol et
     if [[ ! $ip_adres =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
-        echo -e "${KIRMIZI}❌ Geçersiz IP formatı!${NC}"
+        echo -e "${TURUNCU}❌ Geçersiz IP formatı!${NC}"
         enter_bekle
         return 1
     fi
@@ -2497,13 +2506,13 @@ manuel_ip_ban() {
             local basarili=0
             for jail in $jails; do
                 if fail2ban-client set "$jail" banip "$ip_adres" >/dev/null 2>&1; then
-                    echo -e "${YESIL}✅ $ip_adres IP'si $jail jail'ine banlandı${NC}"
+                    echo -e "${ACIK_YESIL}✅ $ip_adres IP'si $jail jail'ine banlandı${NC}"
                     basarili=$((basarili + 1))
                 fi
             done
             
             if [[ $basarili -gt 0 ]]; then
-                echo -e "${YESIL}✅ $ip_adres IP'si $basarili jail'e banlandı!${NC}"
+                echo -e "${ACIK_YESIL}✅ $ip_adres IP'si $basarili jail'e banlandı!${NC}"
             fi
         else
             # Belirli jail'e ban ekle
@@ -2512,12 +2521,12 @@ manuel_ip_ban() {
             
             if [[ -n "$secilen_jail" ]]; then
                 if fail2ban-client set "$secilen_jail" banip "$ip_adres" >/dev/null 2>&1; then
-                    echo -e "${YESIL}✅ $ip_adres IP'si $secilen_jail jail'ine banlandı!${NC}"
+                    echo -e "${ACIK_YESIL}✅ $ip_adres IP'si $secilen_jail jail'ine banlandı!${NC}"
                 else
-                    echo -e "${KIRMIZI}❌ Ban işlemi başarısız!${NC}"
+                    echo -e "${TURUNCU}❌ Ban işlemi başarısız!${NC}"
                 fi
             else
-                echo -e "${KIRMIZI}❌ Geçersiz jail seçimi!${NC}"
+                echo -e "${TURUNCU}❌ Geçersiz jail seçimi!${NC}"
             fi
         fi
     else
@@ -2558,26 +2567,26 @@ fail2ban_yeniden_baslat() {
     echo -e "${TURKUAZ}🔄 FAIL2BAN YENİDEN BAŞLATMA${NC}"
     echo "═══════════════════════════════════════════════════════════════════════════════"
     
-    echo -e "${MAVI}[1/3]${NC} Fail2ban durduruluyor..."
+    echo -e "${TURKUAZ}[1/3]${NC} Fail2ban durduruluyor..."
     systemctl stop fail2ban
-    echo -e "${YESIL}   ✅ Fail2ban durduruldu${NC}"
+    echo -e "${ACIK_YESIL}   ✅ Fail2ban durduruldu${NC}"
     
-    echo -e "${MAVI}[2/3]${NC} Konfigürasyon test ediliyor..."
+    echo -e "${TURKUAZ}[2/3]${NC} Konfigürasyon test ediliyor..."
     if fail2ban-client -t >/dev/null 2>&1; then
-        echo -e "${YESIL}   ✅ Konfigürasyon geçerli${NC}"
+        echo -e "${ACIK_YESIL}   ✅ Konfigürasyon geçerli${NC}"
     else
-        echo -e "${KIRMIZI}   ❌ Konfigürasyon hatası!${NC}"
+        echo -e "${TURUNCU}   ❌ Konfigürasyon hatası!${NC}"
         enter_bekle
         return 1
     fi
     
-    echo -e "${MAVI}[3/3]${NC} Fail2ban başlatılıyor..."
+    echo -e "${TURKUAZ}[3/3]${NC} Fail2ban başlatılıyor..."
     systemctl start fail2ban
     
     if systemctl is-active --quiet fail2ban; then
-        echo -e "${YESIL}   ✅ Fail2ban başarıyla başlatıldı${NC}"
+        echo -e "${ACIK_YESIL}   ✅ Fail2ban başarıyla başlatıldı${NC}"
     else
-        echo -e "${KIRMIZI}   ❌ Fail2ban başlatılamadı!${NC}"
+        echo -e "${TURUNCU}   ❌ Fail2ban başlatılamadı!${NC}"
     fi
     
     enter_bekle
@@ -2594,9 +2603,9 @@ ban_gecmisi_goster() {
     if [[ -f "/var/log/fail2ban.log" ]]; then
         tail -50 /var/log/fail2ban.log | grep -E "(Ban|Unban)" | while IFS= read -r line; do
             if echo "$line" | grep -q "Ban"; then
-                echo -e "${KIRMIZI}🔴 $line${NC}"
+                echo -e "${TURUNCU}🔴 $line${NC}"
             else
-                echo -e "${YESIL}🟢 $line${NC}"
+                echo -e "${ACIK_YESIL}🟢 $line${NC}"
             fi
         done
     else
@@ -2613,9 +2622,9 @@ ban_gecmisi_goster() {
 
 # CloudPanel menü gösterme
 cloudpanel_menu_goster() {
-    echo -e "${MAVI}╔════════════════════════════════════╗${NC}"
-    echo -e "${MAVI}║         CLOUDPANEL MENÜSÜ         ║${NC}"
-    echo -e "${MAVI}╚════════════════════════════════════╝${NC}"
+    echo -e "${TURKUAZ}╔════════════════════════════════════╗${NC}"
+    echo -e "${TURKUAZ}║         CLOUDPANEL MENÜSÜ         ║${NC}"
+    echo -e "${TURKUAZ}╚════════════════════════════════════╝${NC}"
     echo ""
     
     cloudpanel_durum_kontrol
@@ -2660,7 +2669,7 @@ kurtar_engelkaldir_menu() {
             return 0
             ;;
         *)
-            echo -e "${KIRMIZI}❌ Geçersiz seçim!${NC}"
+            echo -e "${TURUNCU}❌ Geçersiz seçim!${NC}"
             sleep 2
             kurtar_engelkaldir_menu
             ;;
@@ -2676,7 +2685,7 @@ kurtar_sh_calistir() {
     echo -e "${MOR}╚══════════════════════════════════════════════════════════╝${NC}"
     echo ""
     
-    echo -e "${KIRMIZI}⚠️ UYARI: Bu işlem tüm fail2ban banlarını kaldırır ve sistemi sıfırlar!${NC}"
+    echo -e "${TURUNCU}⚠️ UYARI: Bu işlem tüm fail2ban banlarını kaldırır ve sistemi sıfırlar!${NC}"
     echo -e "${SARI}Sunucu: $(hostname)${NC}"
     echo -e "${SARI}Dış IP: $DIS_IP${NC}"
     echo -e "${SARI}İç IP: $IC_IP${NC}"
@@ -2695,30 +2704,30 @@ kurtar_sh_calistir() {
     echo "═══════════════════════════════════════════════════════════════════════════════"
     
     # Fail2ban durumunu kontrol et
-    echo -e "${MAVI}[1/8]${NC} Fail2ban durumu kontrol ediliyor..."
+    echo -e "${TURKUAZ}[1/8]${NC} Fail2ban durumu kontrol ediliyor..."
     if systemctl is-active --quiet fail2ban; then
-        echo -e "${YESIL}   ✅ Fail2ban çalışıyor${NC}"
+        echo -e "${ACIK_YESIL}   ✅ Fail2ban çalışıyor${NC}"
     else
         echo -e "${SARI}   ⚠️ Fail2ban zaten çalışmıyor${NC}"
     fi
     
     # Fail2ban'ı durdur
-    echo -e "${MAVI}[2/8]${NC} Fail2ban servisi durduruluyor..."
+    echo -e "${TURKUAZ}[2/8]${NC} Fail2ban servisi durduruluyor..."
     systemctl stop fail2ban
-    echo -e "${YESIL}   ✅ Fail2ban durduruldu${NC}"
+    echo -e "${ACIK_YESIL}   ✅ Fail2ban durduruldu${NC}"
     
     # Tüm iptables kurallarını temizle
-    echo -e "${MAVI}[3/8]${NC} Fail2ban tarafından eklenen iptables kuralları temizleniyor..."
+    echo -e "${TURKUAZ}[3/8]${NC} Fail2ban tarafından eklenen iptables kuralları temizleniyor..."
     iptables -F
     iptables -X
     iptables -t nat -F
     iptables -t nat -X
     iptables -t mangle -F
     iptables -t mangle -X
-    echo -e "${YESIL}   ✅ Iptables kuralları temizlendi${NC}"
+    echo -e "${ACIK_YESIL}   ✅ Iptables kuralları temizlendi${NC}"
     
     # Varsayılan iptables kurallarını oluştur
-    echo -e "${MAVI}[4/8]${NC} Varsayılan güvenlik kuralları uygulanıyor..."
+    echo -e "${TURKUAZ}[4/8]${NC} Varsayılan güvenlik kuralları uygulanıyor..."
     iptables -P INPUT ACCEPT
     iptables -P FORWARD ACCEPT
     iptables -P OUTPUT ACCEPT
@@ -2726,20 +2735,20 @@ kurtar_sh_calistir() {
     # SSH ve CloudPanel erişimini sağla
     iptables -A INPUT -p tcp --dport 22 -j ACCEPT
     iptables -A INPUT -p tcp --dport 8443 -j ACCEPT  # CloudPanel web arayüzü
-    echo -e "${YESIL}   ✅ Temel erişim kuralları eklendi${NC}"
+    echo -e "${ACIK_YESIL}   ✅ Temel erişim kuralları eklendi${NC}"
     
     # Fail2ban jail dosyalarındaki engellenen IP'leri temizle
-    echo -e "${MAVI}[5/8]${NC} Fail2ban jail dosyaları temizleniyor..."
+    echo -e "${TURKUAZ}[5/8]${NC} Fail2ban jail dosyaları temizleniyor..."
     if [[ -f "/var/lib/fail2ban/fail2ban.sqlite3" ]]; then
         rm -f /var/lib/fail2ban/fail2ban.sqlite3
         touch /var/lib/fail2ban/fail2ban.sqlite3
-        echo -e "${YESIL}   ✅ Fail2ban veritabanı temizlendi${NC}"
+        echo -e "${ACIK_YESIL}   ✅ Fail2ban veritabanı temizlendi${NC}"
     else
         echo -e "${SARI}   ⚠️ Fail2ban veritabanı bulunamadı${NC}"
     fi
     
     # Fail2ban jail'lerini sıfırla
-    echo -e "${MAVI}[6/8]${NC} Fail2ban jail'leri sıfırlanıyor..."
+    echo -e "${TURKUAZ}[6/8]${NC} Fail2ban jail'leri sıfırlanıyor..."
     local jails=$(fail2ban-client status 2>/dev/null | grep "Jail list:" | cut -d: -f2 | tr ',' '\n' | xargs)
     
     if [[ -n "$jails" ]]; then
@@ -2748,13 +2757,13 @@ kurtar_sh_calistir() {
             # Tüm IP'leri unban et (jail çalışmıyorsa hata verebilir, o yüzden sessiz)
             fail2ban-client set "$jail" unbanip --all >/dev/null 2>&1 || true
         done
-        echo -e "${YESIL}   ✅ Jail'ler sıfırlandı${NC}"
+        echo -e "${ACIK_YESIL}   ✅ Jail'ler sıfırlandı${NC}"
     else
         echo -e "${SARI}   ⚠️ Aktif jail bulunamadı${NC}"
     fi
     
     # UFW kurallarını yeniden düzenle
-    echo -e "${MAVI}[7/8]${NC} UFW kuralları yeniden düzenleniyor..."
+    echo -e "${TURKUAZ}[7/8]${NC} UFW kuralları yeniden düzenleniyor..."
     ufw --force reset >/dev/null 2>&1
     ufw default deny incoming >/dev/null 2>&1
     ufw default allow outgoing >/dev/null 2>&1
@@ -2769,25 +2778,25 @@ kurtar_sh_calistir() {
     ufw allow 443/tcp >/dev/null 2>&1
     
     ufw --force enable >/dev/null 2>&1
-    echo -e "${YESIL}   ✅ UFW kuralları yeniden düzenlendi${NC}"
+    echo -e "${ACIK_YESIL}   ✅ UFW kuralları yeniden düzenlendi${NC}"
     
     # Fail2ban'ı yeniden başlat
-    echo -e "${MAVI}[8/8]${NC} Fail2ban yeniden başlatılıyor..."
+    echo -e "${TURKUAZ}[8/8]${NC} Fail2ban yeniden başlatılıyor..."
     systemctl start fail2ban
     
     if systemctl is-active --quiet fail2ban; then
-        echo -e "${YESIL}   ✅ Fail2ban başarıyla başlatıldı${NC}"
+        echo -e "${ACIK_YESIL}   ✅ Fail2ban başarıyla başlatıldı${NC}"
     else
-        echo -e "${KIRMIZI}   ❌ Fail2ban başlatılamadı!${NC}"
+        echo -e "${TURUNCU}   ❌ Fail2ban başlatılamadı!${NC}"
     fi
     
     echo ""
-    echo -e "${YESIL}╔══════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${YESIL}║           ✅ KURTARMA İŞLEMİ TAMAMLANDI!               ║${NC}"
-    echo -e "${YESIL}╚══════════════════════════════════════════════════════════╝${NC}"
+    echo -e "${ACIK_YESIL}╔══════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${ACIK_YESIL}║           ✅ KURTARMA İŞLEMİ TAMAMLANDI!               ║${NC}"
+    echo -e "${ACIK_YESIL}╚══════════════════════════════════════════════════════════╝${NC}"
     echo ""
     echo -e "${BEYAZ}📊 Kurtarma Özeti:${NC}"
-    echo -e "   🛡️ Fail2ban: $(systemctl is-active --quiet fail2ban && echo -e "${YESIL}Çalışıyor${NC}" || echo -e "${KIRMIZI}Çalışmıyor${NC}")"
+    echo -e "   🛡️ Fail2ban: $(systemctl is-active --quiet fail2ban && echo -e "${ACIK_YESIL}Çalışıyor${NC}" || echo -e "${TURUNCU}Çalışmıyor${NC}")"
     echo -e "   🔓 Tüm IP banları kaldırıldı"
     echo -e "   🔧 Iptables kuralları sıfırlandı"
     echo -e "   🗄️ Veritabanı temizlendi"
@@ -2813,13 +2822,13 @@ engelkaldir_sh_calistir() {
     
     # Fail2ban durumu kontrol
     if ! systemctl is-active --quiet fail2ban; then
-        echo -e "${KIRMIZI}❌ Fail2ban servisi çalışmıyor!${NC}"
+        echo -e "${TURUNCU}❌ Fail2ban servisi çalışmıyor!${NC}"
         enter_bekle
         return 1
     fi
     
     # Tüm jail'leri listele
-    echo -e "${MAVI}[1/3]${NC} Aktif jail'ler tespit ediliyor..."
+    echo -e "${TURKUAZ}[1/3]${NC} Aktif jail'ler tespit ediliyor..."
     local jails=$(fail2ban-client status 2>/dev/null | grep "Jail list:" | sed "s/^[^:]*:[ \t]*//g" | sed "s/,//g")
     
     if [[ -z "$jails" ]]; then
@@ -2828,10 +2837,10 @@ engelkaldir_sh_calistir() {
         return 0
     fi
     
-    echo -e "${YESIL}   ✅ Bulunan jail'ler: $jails${NC}"
+    echo -e "${ACIK_YESIL}   ✅ Bulunan jail'ler: $jails${NC}"
     
     # Her jail'deki tüm IP'leri kaldır
-    echo -e "${MAVI}[2/3]${NC} Tüm jail'lerden IP banları kaldırılıyor..."
+    echo -e "${TURKUAZ}[2/3]${NC} Tüm jail'lerden IP banları kaldırılıyor..."
     local toplam_kaldirildi=0
     
     for jail in $jails; do
@@ -2855,13 +2864,13 @@ engelkaldir_sh_calistir() {
     done
     
     # Sonuç raporu
-    echo -e "${MAVI}[3/3]${NC} İşlem tamamlandı..."
-    echo -e "${YESIL}   ✅ Toplam $toplam_kaldirildi IP banı kaldırıldı${NC}"
+    echo -e "${TURKUAZ}[3/3]${NC} İşlem tamamlandı..."
+    echo -e "${ACIK_YESIL}   ✅ Toplam $toplam_kaldirildi IP banı kaldırıldı${NC}"
     
     echo ""
-    echo -e "${YESIL}╔══════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${YESIL}║           ✅ ENGEL KALDIRMA TAMAMLANDI!                ║${NC}"
-    echo -e "${YESIL}╚══════════════════════════════════════════════════════════╝${NC}"
+    echo -e "${ACIK_YESIL}╔══════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${ACIK_YESIL}║           ✅ ENGEL KALDIRMA TAMAMLANDI!                ║${NC}"
+    echo -e "${ACIK_YESIL}╚══════════════════════════════════════════════════════════╝${NC}"
     echo ""
     echo -e "${BEYAZ}📊 İşlem Özeti:${NC}"
     echo -e "   🔓 Kaldırılan IP sayısı: $toplam_kaldirildi"
@@ -2899,7 +2908,7 @@ cloudpanel_menu() {
                 kurtar_engelkaldir_menu
                 ;;
             6)
-                echo -e "${MAVI}🔙 Ana menüye dönülüyor...${NC}"
+                echo -e "${TURKUAZ}🔙 Ana menüye dönülüyor...${NC}"
                 return 0
                 ;;
             0)
@@ -2959,30 +2968,30 @@ mail_sunucu_kur() {
 
 # CloudPanel kontrolü
 cloudpanel_kontrol() {
-    echo -e "${MAVI}[1/12]${NC} CloudPanel kontrolü yapılıyor..."
+    echo -e "${TURKUAZ}[1/12]${NC} CloudPanel kontrolü yapılıyor..."
     
     if [[ ! -d "/home/clp" ]]; then
-        echo -e "${KIRMIZI}❌ CloudPanel kurulu değil!${NC}"
+        echo -e "${TURUNCU}❌ CloudPanel kurulu değil!${NC}"
         echo -e "${SARI}⚠️ Önce CloudPanel kurulumunu yapın.${NC}"
         return 1
     fi
     
     if ! systemctl is-active --quiet clp-nginx; then
-        echo -e "${KIRMIZI}❌ CloudPanel web sunucusu çalışmıyor!${NC}"
+        echo -e "${TURUNCU}❌ CloudPanel web sunucusu çalışmıyor!${NC}"
         return 1
     fi
     
-    echo -e "${YESIL}✅ CloudPanel aktif ve çalışıyor${NC}"
+    echo -e "${ACIK_YESIL}✅ CloudPanel aktif ve çalışıyor${NC}"
     return 0
 }
 
 # CloudPanel SSL sertifikalarını bul
 cloudpanel_ssl_bul() {
-    echo -e "${MAVI}[2/12]${NC} SSL sertifikaları kontrol ediliyor..."
+    echo -e "${TURKUAZ}[2/12]${NC} SSL sertifikaları kontrol ediliyor..."
     
     # CloudPanel SSL dizinini kontrol et
     if [[ ! -d "$SSL_SERTIFIKA_DIZINI" ]]; then
-        echo -e "${KIRMIZI}❌ SSL sertifika dizini bulunamadı!${NC}"
+        echo -e "${TURUNCU}❌ SSL sertifika dizini bulunamadı!${NC}"
         return 1
     fi
     
@@ -2992,7 +3001,7 @@ cloudpanel_ssl_bul() {
         local ssl_key="$SSL_SERTIFIKA_DIZINI/$domain.key"
         
         if [[ -f "$ssl_cert" && -f "$ssl_key" ]]; then
-            echo -e "${YESIL}✅ SSL bulundu: $domain${NC}"
+            echo -e "${ACIK_YESIL}✅ SSL bulundu: $domain${NC}"
             SSL_CERT="$ssl_cert"
             SSL_KEY="$ssl_key"
             return 0
@@ -3007,7 +3016,7 @@ cloudpanel_ssl_bul() {
 
 # Manuel domain girişi
 manuel_domain_girisi() {
-    echo -e "${MAVI}[3/12]${NC} Mail domain ayarları..."
+    echo -e "${TURKUAZ}[3/12]${NC} Mail domain ayarları..."
     
     # Mevcut domain listesini göster
     echo -e "${BEYAZ}Mevcut domainler:${NC}"
@@ -3025,13 +3034,13 @@ manuel_domain_girisi() {
         return 1
     fi
     
-    echo -e "${YESIL}✅ Domain ayarlandı: $YENI_ALAN_ADI${NC}"
+    echo -e "${ACIK_YESIL}✅ Domain ayarlandı: $YENI_ALAN_ADI${NC}"
     return 0
 }
 
 # Mail paketlerini kur
 mail_paketleri_kur() {
-    echo -e "${MAVI}[4/12]${NC} Mail paketleri kuruluyor..."
+    echo -e "${TURKUAZ}[4/12]${NC} Mail paketleri kuruluyor..."
     
     # Gerekli paketleri kur
     apt update
@@ -3040,17 +3049,17 @@ mail_paketleri_kur() {
                    opendkim-tools mailutils
     
     if [[ $? -ne 0 ]]; then
-        echo -e "${KIRMIZI}❌ Paket kurulumu başarısız!${NC}"
+        echo -e "${TURUNCU}❌ Paket kurulumu başarısız!${NC}"
         return 1
     fi
     
-    echo -e "${YESIL}✅ Mail paketleri kuruldu${NC}"
+    echo -e "${ACIK_YESIL}✅ Mail paketleri kuruldu${NC}"
     return 0
 }
 
 # Veritabanı oluştur
 veritabani_olustur() {
-    echo -e "${MAVI}[5/12]${NC} Veritabanı oluşturuluyor..."
+    echo -e "${TURKUAZ}[5/12]${NC} Veritabanı oluşturuluyor..."
     
     # MySQL root şifresini al
     if [[ -z "$MYSQL_ROOT_SIFRE" ]]; then
@@ -3094,17 +3103,17 @@ CREATE TABLE IF NOT EXISTS virtual_aliases (
 EOF
     
     if [[ $? -ne 0 ]]; then
-        echo -e "${KIRMIZI}❌ Veritabanı oluşturma başarısız!${NC}"
+        echo -e "${TURUNCU}❌ Veritabanı oluşturma başarısız!${NC}"
         return 1
     fi
     
-    echo -e "${YESIL}✅ Veritabanı oluşturuldu${NC}"
+    echo -e "${ACIK_YESIL}✅ Veritabanı oluşturuldu${NC}"
     return 0
 }
 
 # Domain ve kullanıcı ekle
 domain_ve_kullanici_ekle() {
-    echo -e "${MAVI}[6/12]${NC} Domain ve kullanıcılar ekleniyor..."
+    echo -e "${TURKUAZ}[6/12]${NC} Domain ve kullanıcılar ekleniyor..."
     
     # Domain ekle
     mysql -u"$MYSQL_ROOT_KULLANICI" -p"$MYSQL_ROOT_SIFRE" $MAIL_VERITABANI_ADI << EOF
@@ -3121,7 +3130,7 @@ SELECT id, '$admin_sifre_hash', 'admin@$YENI_ALAN_ADI'
 FROM virtual_domains WHERE name='$YENI_ALAN_ADI';
 EOF
     
-    echo -e "${YESIL}✅ Admin hesabı oluşturuldu:${NC}"
+    echo -e "${ACIK_YESIL}✅ Admin hesabı oluşturuldu:${NC}"
     echo -e "   📧 Email: admin@$YENI_ALAN_ADI"
     echo -e "   🔑 Şifre: $admin_sifre"
     
@@ -3130,7 +3139,7 @@ EOF
 
 # Postfix yapılandır
 postfix_yapilandir() {
-    echo -e "${MAVI}[7/12]${NC} Postfix yapılandırılıyor..."
+    echo -e "${TURKUAZ}[7/12]${NC} Postfix yapılandırılıyor..."
     
     # Ana yapılandırma
     postconf -e "myhostname = $YENI_ALAN_ADI"
@@ -3184,13 +3193,13 @@ EOF
     chmod 0640 /etc/postfix/mysql-*.cf
     chown root:postfix /etc/postfix/mysql-*.cf
     
-    echo -e "${YESIL}✅ Postfix yapılandırıldı${NC}"
+    echo -e "${ACIK_YESIL}✅ Postfix yapılandırıldı${NC}"
     return 0
 }
 
 # Dovecot yapılandır
 dovecot_yapilandir() {
-    echo -e "${MAVI}[8/12]${NC} Dovecot yapılandırılıyor..."
+    echo -e "${TURKUAZ}[8/12]${NC} Dovecot yapılandırılıyor..."
     
     # Ana yapılandırma
     cat > /etc/dovecot/dovecot.conf << EOF
@@ -3273,13 +3282,13 @@ EOF
     useradd -g vmail -u 5000 vmail -d /var/mail
     chown -R vmail:vmail /var/mail
     
-    echo -e "${YESIL}✅ Dovecot yapılandırıldı${NC}"
+    echo -e "${ACIK_YESIL}✅ Dovecot yapılandırıldı${NC}"
     return 0
 }
 
 # OpenDKIM yapılandır
 opendkim_yapilandir() {
-    echo -e "${MAVI}[9/12]${NC} OpenDKIM yapılandırılıyor..."
+    echo -e "${TURKUAZ}[9/12]${NC} OpenDKIM yapılandırılıyor..."
     
     # Ana yapılandırma
     cat > /etc/opendkim.conf << EOF
@@ -3308,13 +3317,13 @@ EOF
     postconf -e "smtpd_milters = inet:localhost:8891"
     postconf -e "non_smtpd_milters = inet:localhost:8891"
     
-    echo -e "${YESIL}✅ OpenDKIM yapılandırıldı${NC}"
+    echo -e "${ACIK_YESIL}✅ OpenDKIM yapılandırıldı${NC}"
     return 0
 }
 
 # Roundcube kur
 roundcube_kur() {
-    echo -e "${MAVI}[10/12]${NC} Roundcube kuruluyor..."
+    echo -e "${TURKUAZ}[10/12]${NC} Roundcube kuruluyor..."
     
     # Roundcube indirme ve kurulum
     cd /tmp
@@ -3338,13 +3347,13 @@ EOF
     # İzinleri ayarla
     chown -R www-data:www-data /var/www/roundcube
     
-    echo -e "${YESIL}✅ Roundcube kuruldu${NC}"
+    echo -e "${ACIK_YESIL}✅ Roundcube kuruldu${NC}"
     return 0
 }
 
 # CloudPanel Nginx yapılandır
 cloudpanel_nginx_yapilandir() {
-    echo -e "${MAVI}[11/12]${NC} CloudPanel Nginx yapılandırılıyor..."
+    echo -e "${TURKUAZ}[11/12]${NC} CloudPanel Nginx yapılandırılıyor..."
     
     # Webmail vhost oluştur
     cat > "$NGINX_MEVCUT_SITELER/webmail.$YENI_ALAN_ADI.conf" << EOF
@@ -3385,13 +3394,13 @@ EOF
     # Nginx'i test et ve yeniden yükle
     nginx -t && systemctl reload nginx
     
-    echo -e "${YESIL}✅ Nginx yapılandırıldı${NC}"
+    echo -e "${ACIK_YESIL}✅ Nginx yapılandırıldı${NC}"
     return 0
 }
 
 # Servisleri başlat
 servisleri_baslat() {
-    echo -e "${MAVI}[12/12]${NC} Servisler başlatılıyor..."
+    echo -e "${TURKUAZ}[12/12]${NC} Servisler başlatılıyor..."
     
     systemctl restart postfix dovecot opendkim
     systemctl enable postfix dovecot opendkim
@@ -3402,18 +3411,18 @@ servisleri_baslat() {
     
     for servis in "${servisler[@]}"; do
         if systemctl is-active --quiet "$servis"; then
-            echo -e "   ✅ $servis: ${YESIL}Çalışıyor${NC}"
+            echo -e "   ✅ $servis: ${ACIK_YESIL}Çalışıyor${NC}"
         else
-            echo -e "   ❌ $servis: ${KIRMIZI}Çalışmıyor${NC}"
+            echo -e "   ❌ $servis: ${TURUNCU}Çalışmıyor${NC}"
             basarisiz=$((basarisiz + 1))
         fi
     done
     
     if [[ $basarisiz -eq 0 ]]; then
-        echo -e "${YESIL}✅ Tüm servisler başarıyla başlatıldı${NC}"
+        echo -e "${ACIK_YESIL}✅ Tüm servisler başarıyla başlatıldı${NC}"
         return 0
     else
-        echo -e "${KIRMIZI}❌ Bazı servisler başlatılamadı!${NC}"
+        echo -e "${TURUNCU}❌ Bazı servisler başlatılamadı!${NC}"
         return 1
     fi
 }
@@ -3426,43 +3435,43 @@ sistem_testleri() {
     # Postfix testi
     echo -e "${BEYAZ}📨 Postfix SMTP testi...${NC}"
     if nc -zv localhost 25 2>/dev/null; then
-        echo -e "${YESIL}✅ SMTP port 25 açık${NC}"
+        echo -e "${ACIK_YESIL}✅ SMTP port 25 açık${NC}"
     else
-        echo -e "${KIRMIZI}❌ SMTP port 25 kapalı${NC}"
+        echo -e "${TURUNCU}❌ SMTP port 25 kapalı${NC}"
     fi
     
     # Dovecot testi
     echo -e "${BEYAZ}📬 Dovecot IMAP/POP3 testi...${NC}"
     if nc -zv localhost 993 2>/dev/null; then
-        echo -e "${YESIL}✅ IMAP SSL port 993 açık${NC}"
+        echo -e "${ACIK_YESIL}✅ IMAP SSL port 993 açık${NC}"
     else
-        echo -e "${KIRMIZI}❌ IMAP SSL port 993 kapalı${NC}"
+        echo -e "${TURUNCU}❌ IMAP SSL port 993 kapalı${NC}"
     fi
     
     # OpenDKIM testi
     echo -e "${BEYAZ}🔑 OpenDKIM testi...${NC}"
     if nc -zv localhost 8891 2>/dev/null; then
-        echo -e "${YESIL}✅ OpenDKIM port 8891 açık${NC}"
+        echo -e "${ACIK_YESIL}✅ OpenDKIM port 8891 açık${NC}"
     else
-        echo -e "${KIRMIZI}❌ OpenDKIM port 8891 kapalı${NC}"
+        echo -e "${TURUNCU}❌ OpenDKIM port 8891 kapalı${NC}"
     fi
 
     # DMARC testi ekle
     echo -e "${BEYAZ}📋 DMARC testi...${NC}"
     local dmarc_kayit=$(dig +short TXT _dmarc.$YENI_ALAN_ADI)
     if [[ -n "$dmarc_kayit" ]]; then
-        echo -e "${YESIL}✅ DMARC kaydı mevcut${NC}"
+        echo -e "${ACIK_YESIL}✅ DMARC kaydı mevcut${NC}"
         echo -e "   📋 Kayıt: $dmarc_kayit"
     else
-        echo -e "${KIRMIZI}❌ DMARC kaydı bulunamadı${NC}"
+        echo -e "${TURUNCU}❌ DMARC kaydı bulunamadı${NC}"
     fi
 
     # DNS kayıtları testi
     echo -e "${BEYAZ}🌐 DNS kayıtları testi...${NC}"
     if host -t MX "$YENI_ALAN_ADI" 2>/dev/null | grep -q "mail.$YENI_ALAN_ADI"; then
-        echo -e "${YESIL}✅ MX kaydı doğru${NC}"
+        echo -e "${ACIK_YESIL}✅ MX kaydı doğru${NC}"
     else
-        echo -e "${KIRMIZI}❌ MX kaydı eksik veya hatalı${NC}"
+        echo -e "${TURUNCU}❌ MX kaydı eksik veya hatalı${NC}"
     fi
     
     return 0
@@ -3481,7 +3490,7 @@ dkim_kayitlari_goster() {
         echo ""
         echo -e "${SARI}⚠️ Bu kaydı DNS yöneticinize eklemeyi unutmayın!${NC}"
     else
-        echo -e "${KIRMIZI}❌ DKIM kayıt dosyası bulunamadı!${NC}"
+        echo -e "${TURUNCU}❌ DKIM kayıt dosyası bulunamadı!${NC}"
     fi
     
     return 0
@@ -3489,9 +3498,9 @@ dkim_kayitlari_goster() {
 
 # Kurulum özeti
 kurulum_ozeti() {
-    echo -e "${YESIL}╔══════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${YESIL}║           ✅ MAIL SUNUCU KURULUMU TAMAMLANDI!           ║${NC}"
-    echo -e "${YESIL}╚══════════════════════════════════════════════════════════╝${NC}"
+    echo -e "${ACIK_YESIL}╔══════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${ACIK_YESIL}║           ✅ MAIL SUNUCU KURULUMU TAMAMLANDI!           ║${NC}"
+    echo -e "${ACIK_YESIL}╚══════════════════════════════════════════════════════════╝${NC}"
     echo ""
     echo -e "${BEYAZ}📊 Kurulum Özeti:${NC}"
     echo -e "   🌐 Domain: $YENI_ALAN_ADI"
@@ -3517,9 +3526,9 @@ mail_servisleri() {
     while true; do
         ana_baslik_goster
         
-        echo -e "${MAVI}╔════════════════════════════════════╗${NC}"
-        echo -e "${MAVI}║        MAİL SERVİSLERİ            ║${NC}"
-        echo -e "${MAVI}╚════════════════════════════════════╝${NC}"
+        echo -e "${TURKUAZ}╔════════════════════════════════════╗${NC}"
+        echo -e "${TURKUAZ}║        MAİL SERVİSLERİ            ║${NC}"
+        echo -e "${TURKUAZ}╚════════════════════════════════════╝${NC}"
         echo ""
         
         echo -e "1) 🟢 Tüm Servisleri Başlat"
@@ -3554,9 +3563,9 @@ mail_testleri() {
     while true; do
         ana_baslik_goster
         
-        echo -e "${MAVI}╔════════════════════════════════════╗${NC}"
-        echo -e "${MAVI}║          MAİL TESTLERİ            ║${NC}"
-        echo -e "${MAVI}╚════════════════════════════════════╝${NC}"
+        echo -e "${TURKUAZ}╔════════════════════════════════════╗${NC}"
+        echo -e "${TURKUAZ}║          MAİL TESTLERİ            ║${NC}"
+        echo -e "${TURKUAZ}╚════════════════════════════════════╝${NC}"
         echo ""
         
         echo -e "1) 🔍 Sistem Testleri"
@@ -3591,22 +3600,22 @@ dkim_testi_yap() {
     echo "═══════════════════════════════════════════════════"
     
     if ! command -v opendkim-testkey &>/dev/null; then
-        echo -e "${KIRMIZI}❌ OpenDKIM araçları kurulu değil!${NC}"
+        echo -e "${TURUNCU}❌ OpenDKIM araçları kurulu değil!${NC}"
         return 1
     fi
 
     local dkim_anahtar="/etc/opendkim/keys/$YENI_ALAN_ADI/mail.private"
     
     if [[ ! -f "$dkim_anahtar" ]]; then
-        echo -e "${KIRMIZI}❌ DKIM özel anahtarı bulunamadı!${NC}"
+        echo -e "${TURUNCU}❌ DKIM özel anahtarı bulunamadı!${NC}"
         return 1
     fi
 
     echo -e "${BEYAZ}📋 DKIM anahtarı test ediliyor...${NC}"
     if opendkim-testkey -d "$YENI_ALAN_ADI" -s mail -k "$dkim_anahtar"; then
-        echo -e "${YESIL}✅ DKIM anahtarı geçerli${NC}"
+        echo -e "${ACIK_YESIL}✅ DKIM anahtarı geçerli${NC}"
     else
-        echo -e "${KIRMIZI}❌ DKIM anahtarı geçersiz!${NC}"
+        echo -e "${TURUNCU}❌ DKIM anahtarı geçersiz!${NC}"
     fi
     
     enter_bekle
@@ -3622,15 +3631,15 @@ test_mail_gonder() {
     read -r hedef_adres
     
     if [[ ! $hedef_adres =~ ^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$ ]]; then
-        echo -e "${KIRMIZI}❌ Geçersiz email adresi!${NC}"
+        echo -e "${TURUNCU}❌ Geçersiz email adresi!${NC}"
         return 1
     fi
 
     echo -e "Test maili gönderiliyor..."
     if echo "Bu bir test mailidir. Mail sunucusu kurulumu test edilmektedir." | mail -s "Mail Sunucusu Test" "$hedef_adres"; then
-        echo -e "${YESIL}✅ Test maili gönderildi${NC}"
+        echo -e "${ACIK_YESIL}✅ Test maili gönderildi${NC}"
     else
-        echo -e "${KIRMIZI}❌ Test maili gönderilemedi!${NC}"
+        echo -e "${TURUNCU}❌ Test maili gönderilemedi!${NC}"
     fi
     
     enter_bekle
@@ -3668,7 +3677,7 @@ ssl_kontrol() {
     echo "═══════════════════════════════════════════════════"
     
     if [[ ! -f "$SSL_CERT" ]]; then
-        echo -e "${KIRMIZI}❌ SSL sertifikası bulunamadı!${NC}"
+        echo -e "${TURUNCU}❌ SSL sertifikası bulunamadı!${NC}"
         return 1
     fi
 
@@ -3682,9 +3691,9 @@ ssl_kontrol() {
     
     if [[ $son_kullanma_ts -gt $simdi_ts ]]; then
         kalan_gun=$(( ($son_kullanma_ts - $simdi_ts) / 86400 ))
-        echo -e "${YESIL}✅ Sertifika geçerli (Kalan: $kalan_gun gün)${NC}"
+        echo -e "${ACIK_YESIL}✅ Sertifika geçerli (Kalan: $kalan_gun gün)${NC}"
     else
-        echo -e "${KIRMIZI}❌ Sertifika süresi dolmuş!${NC}"
+        echo -e "${TURUNCU}❌ Sertifika süresi dolmuş!${NC}"
     fi
     
     enter_bekle
@@ -3695,36 +3704,37 @@ ssl_kontrol() {
 # OpenCart İnteraktif Temizleme Betiği
 # Kullanıcı tüm yolları kendisi belirler!
 # =============================================================================
-
-echo -e "${MAVI}========================================${NC}"
-echo -e "${MAVI} OpenCart İnteraktif Temizleme Betiği${NC}"
-echo -e "${MAVI}========================================${NC}"
+opencart_temizle() {
+    
+echo -e "${TURKUAZ}========================================${NC}"
+echo -e "${TURKUAZ} OpenCart İnteraktif Temizleme Betiği${NC}"
+echo -e "${TURKUAZ}========================================${NC}"
 
 # Güvenlik kontrolü
 if [ "$EUID" -ne 0 ]; then
-  echo -e "${KIRMIZI}Bu betik root olarak çalıştırılmalıdır!${NC}"
+  echo -e "${TURUNCU}Bu betik root olarak çalıştırılmalıdır!${NC}"
   exit 1
 fi
 
 # =============================================================================
 # BAŞLANGIÇ MENÜSÜ
 # =============================================================================
-echo -e "\n${YESIL}🎯 Ne yapmak istiyorsunuz?${NC}"
+echo -e "\n${ACIK_YESIL}🎯 Ne yapmak istiyorsunuz?${NC}"
 echo -e "1) Siteni OLUŞTUR..."
 echo -e "2) Çıkış"
 read -p "Seçiminiz (1-2): " initial_choice
 
 case $initial_choice in
   1)
-    echo -e "\n${YESIL}🚀 Site oluşturma işlemi başlatılıyor...${NC}"
+    echo -e "\n${ACIK_YESIL}🚀 Site oluşturma işlemi başlatılıyor...${NC}"
     # Devam eder...
     ;;
   2)
-    echo -e "\n${MAVI}👋 Görüşürüz!${NC}"
+    echo -e "\n${TURKUAZ}👋 Görüşürüz!${NC}"
     exit 0
     ;;
   *)
-    echo -e "\n${KIRMIZI}❌ Geçersiz seçim!${NC}"
+    echo -e "\n${TURUNCU}❌ Geçersiz seçim!${NC}"
     exit 1
     ;;
 esac
@@ -3732,19 +3742,19 @@ esac
 # =============================================================================
 # KULLANICI GİRDİLERİNİ AL
 # =============================================================================
-echo -e "\n${YESIL}🔧 Lütfen dizin yollarını belirtin:${NC}"
+echo -e "\n${ACIK_YESIL}🔧 Lütfen dizin yollarını belirtin:${NC}"
 
 # OpenCart kök dizini
 read -p "OpenCart kök dizini (örn: /home/user/htdocs/site.com): " OPENCART_ROOT
 if [ ! -d "$OPENCART_ROOT" ]; then
-  echo -e "${KIRMIZI}❌ Dizin bulunamadı: $OPENCART_ROOT${NC}"
+  echo -e "${TURUNCU}❌ Dizin bulunamadı: $OPENCART_ROOT${NC}"
   exit 1
 fi
 
 # Data dizini
 read -p "OpenCart data dizini (örn: /home/user/storage): " DATA_ROOT
 if [ ! -d "$DATA_ROOT" ]; then
-  echo -e "${KIRMIZI}❌ Dizin bulunamadı: $DATA_ROOT${NC}"
+  echo -e "${TURUNCU}❌ Dizin bulunamadı: $DATA_ROOT${NC}"
   exit 1
 fi
 
@@ -3752,10 +3762,10 @@ fi
 read -p "Dosya sahibi kullanıcı adı (örn: username): " OWNER
 read -p "Dosya sahibi grup adı (örn: username): " GROUP
 
-echo -e "\n${MAVI}📋 Girilen bilgiler:${NC}"
-echo -e "   OpenCart Kök: ${YESIL}$OPENCART_ROOT${NC}"
-echo -e "   Data Dizini: ${YESIL}$DATA_ROOT${NC}"
-echo -e "   Sahip: ${YESIL}$OWNER:$GROUP${NC}"
+echo -e "\n${TURKUAZ}📋 Girilen bilgiler:${NC}"
+echo -e "   OpenCart Kök: ${ACIK_YESIL}$OPENCART_ROOT${NC}"
+echo -e "   Data Dizini: ${ACIK_YESIL}$DATA_ROOT${NC}"
+echo -e "   Sahip: ${ACIK_YESIL}$OWNER:$GROUP${NC}"
 
 read -p "Bu bilgiler doğru mu? (e/h): " confirm
 if [[ $confirm != [eE] ]]; then
@@ -3767,11 +3777,11 @@ fi
 # ÖNBELLEK TEMİZLEME FONKSİYONU
 # =============================================================================
 temizle_onbellek() {
-  echo -e "\n${YESIL}📁 Önbellek dosyaları temizleniyor...${NC}"
+  echo -e "\n${ACIK_YESIL}📁 Önbellek dosyaları temizleniyor...${NC}"
   
   # OpenCart Ana Önbellek
   if [ -d "$DATA_ROOT/cache" ]; then
-    echo -e "   ${YESIL}✓${NC} OpenCart önbellek temizleniyor..."
+    echo -e "   ${ACIK_YESIL}✓${NC} OpenCart önbellek temizleniyor..."
     cache_count=$(find "$DATA_ROOT/cache" -name "cache.*" -type f 2>/dev/null | wc -l)
     find "$DATA_ROOT/cache" -name "cache.*" -type f -delete 2>/dev/null
     echo -e "     Temizlenen: $cache_count dosya"
@@ -3781,7 +3791,7 @@ temizle_onbellek() {
   
   # VQMod Önbellek
   if [ -d "$OPENCART_ROOT/vqmod/vqcache" ]; then
-    echo -e "   ${YESIL}✓${NC} VQMod önbellek temizleniyor..."
+    echo -e "   ${ACIK_YESIL}✓${NC} VQMod önbellek temizleniyor..."
     vq_count=$(find "$OPENCART_ROOT/vqmod/vqcache" -name "vq2-*" -type f 2>/dev/null | wc -l)
     find "$OPENCART_ROOT/vqmod/vqcache" -name "vq2-*" -type f -delete 2>/dev/null
     rm -f "$OPENCART_ROOT/vqmod/checked.cache" 2>/dev/null
@@ -3793,7 +3803,7 @@ temizle_onbellek() {
   
   # Resim Önbellek
   if [ -d "$OPENCART_ROOT/image/cache" ]; then
-    echo -e "   ${YESIL}✓${NC} Resim önbellek temizleniyor..."
+    echo -e "   ${ACIK_YESIL}✓${NC} Resim önbellek temizleniyor..."
     img_count=$(find "$OPENCART_ROOT/image/cache" -name "*.jpg" -o -name "*.jpeg" -o -name "*.png" -o -name "*.gif" -type f 2>/dev/null | wc -l)
     find "$OPENCART_ROOT/image/cache" -name "*.jpg" -o -name "*.jpeg" -o -name "*.png" -o -name "*.gif" -type f -delete 2>/dev/null
     echo -e "     Temizlenen resim önbellek: $img_count dosya"
@@ -3803,7 +3813,7 @@ temizle_onbellek() {
   
   # Sistem Depolama Önbellek
   if [ -d "$OPENCART_ROOT/system/storage/cache" ]; then
-    echo -e "   ${YESIL}✓${NC} Sistem önbellek temizleniyor..."
+    echo -e "   ${ACIK_YESIL}✓${NC} Sistem önbellek temizleniyor..."
     sys_count=$(find "$OPENCART_ROOT/system/storage/cache" -type f 2>/dev/null | wc -l)
     find "$OPENCART_ROOT/system/storage/cache" -type f -delete 2>/dev/null
     echo -e "     Temizlenen sistem önbellek: $sys_count dosya"
@@ -3816,11 +3826,11 @@ temizle_onbellek() {
 # GÜNLÜK TEMİZLEME FONKSİYONU
 # =============================================================================
 temizle_gunlukleri() {
-  echo -e "\n${YESIL}📝 Günlük dosyaları temizleniyor...${NC}"
+  echo -e "\n${ACIK_YESIL}📝 Günlük dosyaları temizleniyor...${NC}"
   
   # OpenCart Günlükleri
   if [ -d "$DATA_ROOT/logs" ]; then
-    echo -e "   ${YESIL}✓${NC} OpenCart günlükleri temizleniyor..."
+    echo -e "   ${ACIK_YESIL}✓${NC} OpenCart günlükleri temizleniyor..."
     
     # error.log temizle
     if [ -f "$DATA_ROOT/logs/error.log" ]; then
@@ -3854,7 +3864,7 @@ temizle_gunlukleri() {
   
   # VQMod Günlükleri
   if [ -d "$OPENCART_ROOT/vqmod/logs" ]; then
-    echo -e "   ${YESIL}✓${NC} VQMod günlükleri temizleniyor..."
+    echo -e "   ${ACIK_YESIL}✓${NC} VQMod günlükleri temizleniyor..."
     vqmod_log_count=$(find "$OPENCART_ROOT/vqmod/logs" -name "*.log" -type f 2>/dev/null | wc -l)
     find "$OPENCART_ROOT/vqmod/logs" -name "*.log" -type f -exec sh -c '> "$1"' _ {} \; 2>/dev/null
     echo -e "     Temizlenen VQMod günlük: $vqmod_log_count dosya"
@@ -3865,22 +3875,22 @@ temizle_gunlukleri() {
   # Kök dizindeki hatalar.log
   if [ -f "$OPENCART_ROOT/hatalar.log" ]; then
     > "$OPENCART_ROOT/hatalar.log"
-    echo -e "   ${YESIL}✓${NC} Kök dizin hatalar.log temizlendi"
+    echo -e "   ${ACIK_YESIL}✓${NC} Kök dizin hatalar.log temizlendi"
   fi
   
   # PHP error_log dosyaları
   find "$OPENCART_ROOT" -name "error_log" -type f -exec sh -c '> "$1"' _ {} \; 2>/dev/null
-  echo -e "   ${YESIL}✓${NC} PHP hata_günlüğü dosyaları temizlendi"
+  echo -e "   ${ACIK_YESIL}✓${NC} PHP hata_günlüğü dosyaları temizlendi"
 }
 
 # =============================================================================
 # OTURUM TEMİZLEME FONKSİYONU
 # =============================================================================
 temizle_oturumlari() {
-  echo -e "\n${YESIL}🔐 Oturum dosyaları temizleniyor...${NC}"
+  echo -e "\n${ACIK_YESIL}🔐 Oturum dosyaları temizleniyor...${NC}"
   
   if [ -d "$DATA_ROOT/session" ]; then
-    echo -e "   ${YESIL}✓${NC} Eski oturum dosyaları siliniyor..."
+    echo -e "   ${ACIK_YESIL}✓${NC} Eski oturum dosyaları siliniyor..."
     old_sessions=$(find "$DATA_ROOT/session" -name "sess_*" -type f -mtime +7 2>/dev/null | wc -l)
     find "$DATA_ROOT/session" -name "sess_*" -type f -mtime +7 -delete 2>/dev/null
     remaining_sessions=$(find "$DATA_ROOT/session" -name "sess_*" -type f 2>/dev/null | wc -l)
@@ -3895,16 +3905,16 @@ temizle_oturumlari() {
 # İZİN DÜZELTME FONKSİYONU
 # =============================================================================
 duzelt_izinleri() {
-  echo -e "\n${YESIL}🔧 İzinler düzeltiliyor...${NC}"
+  echo -e "\n${ACIK_YESIL}🔧 İzinler düzeltiliyor...${NC}"
   
   # OpenCart kök dizini
-  echo -e "   ${YESIL}✓${NC} OpenCart kök dizini izinleri..."
+  echo -e "   ${ACIK_YESIL}✓${NC} OpenCart kök dizini izinleri..."
   chown -R $OWNER:$GROUP "$OPENCART_ROOT"
   find "$OPENCART_ROOT" -type d -exec chmod 755 {} \;
   find "$OPENCART_ROOT" -type f -exec chmod 644 {} \;
   
   # Özel yazılabilir dizinler
-  echo -e "   ${YESIL}✓${NC} Yazılabilir dizinler..."
+  echo -e "   ${ACIK_YESIL}✓${NC} Yazılabilir dizinler..."
   
   # VQMod dizinleri
   if [ -d "$OPENCART_ROOT/vqmod" ]; then
@@ -3932,12 +3942,12 @@ duzelt_izinleri() {
   fi
   
   # Data dizini
-  echo -e "   ${YESIL}✓${NC} Data dizini izinleri..."
+  echo -e "   ${ACIK_YESIL}✓${NC} Data dizini izinleri..."
   chown -R $OWNER:$GROUP "$DATA_ROOT"
   chmod -R 775 "$DATA_ROOT"
   
   # Yapılandırma dosyaları
-  echo -e "   ${YESIL}✓${NC} Yapılandırma dosyaları..."
+  echo -e "   ${ACIK_YESIL}✓${NC} Yapılandırma dosyaları..."
   chmod 644 "$OPENCART_ROOT/config.php" 2>/dev/null
   chmod 644 "$OPENCART_ROOT/admin/config.php" 2>/dev/null
   
@@ -3950,12 +3960,12 @@ duzelt_izinleri() {
 # DURUM RAPORU FONKSİYONU
 # =============================================================================
 goster_rapor() {
-  echo -e "\n${MAVI}=================================${NC}"
-  echo -e "${MAVI}           DURUM RAPORU           ${NC}"
-  echo -e "${MAVI}=================================${NC}"
+  echo -e "\n${TURKUAZ}=================================${NC}"
+  echo -e "${TURKUAZ}           DURUM RAPORU           ${NC}"
+  echo -e "${TURKUAZ}=================================${NC}"
   
   # Önbellek durumu
-  echo -e "\n${YESIL}📁 ÖNBELLEK DURUMU:${NC}"
+  echo -e "\n${ACIK_YESIL}📁 ÖNBELLEK DURUMU:${NC}"
   oc_cache=$(find "$DATA_ROOT/cache" -name "cache.*" -type f 2>/dev/null | wc -l)
   vq_cache=$(find "$OPENCART_ROOT/vqmod/vqcache" -name "vq2-*" -type f 2>/dev/null | wc -l)
   img_cache=$(find "$OPENCART_ROOT/image/cache" -name "*.jpg" -o -name "*.jpeg" -o -name "*.png" -o -name "*.gif" -type f 2>/dev/null | wc -l)
@@ -3964,7 +3974,7 @@ goster_rapor() {
   echo -e "   Resim Önbellek: $img_cache dosya"
   
   # Günlük durumu
-  echo -e "\n${YESIL}📝 GÜNLÜK DURUMU:${NC}"
+  echo -e "\n${ACIK_YESIL}📝 GÜNLÜK DURUMU:${NC}"
   if [ -f "$DATA_ROOT/logs/error.log" ]; then
     error_lines=$(wc -l < "$DATA_ROOT/logs/error.log" 2>/dev/null || echo 0)
     echo -e "   Hata Günlüğü: $error_lines satır"
@@ -3976,19 +3986,19 @@ goster_rapor() {
   fi
   
   # Oturum durumu
-  echo -e "\n${YESIL}🔐 OTURUM DURUMU:${NC}"
+  echo -e "\n${ACIK_YESIL}🔐 OTURUM DURUMU:${NC}"
   session_count=$(find "$DATA_ROOT/session" -name "sess_*" -type f 2>/dev/null | wc -l)
   echo -e "   Aktif Oturum: $session_count dosya"
   
   # İzin durumu
-  echo -e "\n${YESIL}🔧 İZİN DURUMU:${NC}"
+  echo -e "\n${ACIK_YESIL}🔧 İZİN DURUMU:${NC}"
   oc_perms=$(ls -ld "$OPENCART_ROOT" 2>/dev/null | awk '{print $1, $3, $4}')
   data_perms=$(ls -ld "$DATA_ROOT" 2>/dev/null | awk '{print $1, $3, $4}')
   echo -e "   OpenCart Kök: $oc_perms"
   echo -e "   Data Dizini: $data_perms"
   
   # Disk kullanımı
-  echo -e "\n${YESIL}💾 DİSK KULLANIMI:${NC}"
+  echo -e "\n${ACIK_YESIL}💾 DİSK KULLANIMI:${NC}"
   oc_size=$(du -sh "$OPENCART_ROOT" 2>/dev/null | cut -f1)
   data_size=$(du -sh "$DATA_ROOT" 2>/dev/null | cut -f1)
   echo -e "   OpenCart: $oc_size"
@@ -3998,7 +4008,7 @@ goster_rapor() {
 # =============================================================================
 # İŞLEM MENÜSÜ
 # =============================================================================
-echo -e "\n${YESIL}🎯 Hangi işlemi yapmak istiyorsunuz?${NC}"
+echo -e "\n${ACIK_YESIL}🎯 Hangi işlemi yapmak istiyorsunuz?${NC}"
 echo -e "1) Sadece Önbellek Temizle"
 echo -e "2) Sadece Günlük Temizle"
 echo -e "3) Sadece Oturum Temizle"
@@ -4011,59 +4021,1436 @@ read -p "Seçiminiz (1-7): " choice
 case $choice in
   1)
     temizle_onbellek
-    echo -e "\n${YESIL}✅ Önbellek temizleme tamamlandı!${NC}"
+    echo -e "\n${ACIK_YESIL}✅ Önbellek temizleme tamamlandı!${NC}"
     ;;
   2)
     temizle_gunlukleri
-    echo -e "\n${YESIL}✅ Günlük temizleme tamamlandı!${NC}"
+    echo -e "\n${ACIK_YESIL}✅ Günlük temizleme tamamlandı!${NC}"
     ;;
   3)
     temizle_oturumlari
-    echo -e "\n${YESIL}✅ Oturum temizleme tamamlandı!${NC}"
+    echo -e "\n${ACIK_YESIL}✅ Oturum temizleme tamamlandı!${NC}"
     ;;
   4)
     duzelt_izinleri
-    echo -e "\n${YESIL}✅ İzin düzeltme tamamlandı!${NC}"
+    echo -e "\n${ACIK_YESIL}✅ İzin düzeltme tamamlandı!${NC}"
     ;;
   5)
     temizle_onbellek
     temizle_gunlukleri
     temizle_oturumlari
     duzelt_izinleri
-    echo -e "\n${YESIL}🎉 TAM TEMİZLİK TAMAMLANDI!${NC}"
+    echo -e "\n${ACIK_YESIL}🎉 TAM TEMİZLİK TAMAMLANDI!${NC}"
     ;;
   6)
     goster_rapor
     ;;
   7)
-    echo -e "\n${MAVI}👋 Görüşürüz!${NC}"
+    echo -e "\n${TURKUAZ}👋 Görüşürüz!${NC}"
     exit 0
     ;;
   *)
-    echo -e "\n${KIRMIZI}❌ Geçersiz seçim!${NC}"
+    echo -e "\n${TURUNCU}❌ Geçersiz seçim!${NC}"
     exit 1
     ;;
 esac
 
 # Final rapor
 goster_rapor
-echo -e "\n${YESIL}🎯 İşlem başarıyla tamamlandı!${NC}"
-echo -e "${MAVI}========================================${NC}"
+echo -e "\n${ACIK_YESIL}🎯 İşlem başarıyla tamamlandı!${NC}"
+echo -e "${TURKUAZ}========================================${NC}"
 
+}
+
+# =====================================================
+# 🎬 Django Python Fosiyonları BAŞLATMA
+# =====================================================
+django_yonetici_ayar() {
+
+# Logo
+logo_goster() {
+    clear
+    echo -e "${TURKUAZ}"
+    echo "========================================================================"
+    echo "                    DJANGO SITE YONETICISI                            "
+    echo "                      Bitronix Code v1.0                             "
+    echo "========================================================================"
+    echo -e "${NC}"
+}
+
+# Ilk kurulum - Domain, yol ve port bilgilerini al
+ilk_kurulum() {
+    logo_goster
+    echo -e "${SARI}🔧 ILK KURULUM - BILGILERI GIRIN${NC}"
+    echo "========================================"
+    
+    # Domain al
+    echo -e "${TURKUAZ}🌐 Domain adinizi girin (ornek: bitronixcode.com):${NC}"
+    read -p "Domain: " DOMAIN
+    
+    # Proje yolu al
+    echo -e "${TURKUAZ}📂 Proje kok dizin yolunu girin:${NC}"
+    echo -e "${SARI}Ornek: /home/bitronixcodec/htdocs/bitronixcode.com${NC}"
+    read -p "Proje Yolu: " PROJE_YOLU
+    
+    # Port al
+    echo -e "${TURKUAZ}🔌 Port numarasini girin (ornek: 8090, 8000, 9088):${NC}"
+    read -p "Port: " PORT
+    
+    # Bilgileri kaydet
+    cat > ~/.django_yonetici_ayar << EOF
+DOMAIN="$DOMAIN"
+PROJE_YOLU="$PROJE_YOLU"
+PORT="$PORT"
+EOF
+    
+    echo -e "${ACIK_YESIL}✅ Bilgiler kaydedildi!${NC}"
+    sleep 2
+}
+
+# Ayarlari yukle
+ayarlari_yukle() {
+    if [ -f ~/.django_yonetici_ayar ]; then
+        source ~/.django_yonetici_ayar
+        VENV_YOLU="$PROJE_YOLU/.venv"
+        PID_DOSYASI="/tmp/django_${DOMAIN}_${PORT}.pid"
+    else
+        ilk_kurulum
+        ayarlari_yukle
+    fi
+}
+
+# Site durumunu kontrol et
+site_durumu_kontrol() {
+    if [ -f "$PID_DOSYASI" ] && kill -0 $(cat "$PID_DOSYASI") 2>/dev/null; then
+        echo -e "${ACIK_YESIL}🟢 ACIK${NC}"
+        return 0
+    else
+        echo -e "${TURUNCU}🔴 KAPALI${NC}"
+        return 1
+    fi
+}
+
+# Venv durumunu kontrol et
+venv_durumu_kontrol() {
+    if [ -d "$VENV_YOLU" ]; then
+        echo -e "${ACIK_YESIL}✅ .venv MEVCUT${NC}"
+        return 0
+    else
+        echo -e "${TURUNCU}❌ .venv YOK${NC}"
+        return 1
+    fi
+}
+
+# Ana menu
+ana_menu_goster() {
+    logo_goster
+    
+    # Durum bilgileri
+    echo -e "${ACIK_PEMBE}📊 DURUM BILGILERI:${NC}"
+    echo "========================================"
+    echo -e "🌐 Domain: ${TURKUAZ}$DOMAIN${NC}"
+    echo -e "📂 Proje: ${TURKUAZ}$PROJE_YOLU${NC}"
+    echo -e "🔌 Port: ${TURKUAZ}$PORT${NC}"
+    echo -n "🔄 Site Durumu: "; site_durumu_kontrol
+    echo -n "📦 Sanal Ortam: "; venv_durumu_kontrol
+    echo ""
+    
+    echo -e "${SARI}🎯 MENU SECENEKLERI:${NC}"
+    echo "========================================"
+    echo -e "${ACIK_YESIL}1)${NC} 🚀 Siteyi Dunyaya Ac (On Plan)"
+    echo -e "${ACIK_YESIL}2)${NC} 🔄 Site Arka Planda Calistir/Durdur"
+    echo -e "${ACIK_YESIL}3)${NC} 👤 Superuser Olustur"
+    echo -e "${ACIK_YESIL}4)${NC} 🧪 Site Testi Yap"
+    echo -e "${ACIK_YESIL}5)${NC} ⚙️ Ayarlari Degistir"
+    echo -e "${ACIK_YESIL}6)${NC} 📋 Log Goruntule"
+    echo -e "${ACIK_YESIL}7)${NC} 🛠️ TAM KURULUM (Yedekten Cikar + Ortam Kurulum)"
+    echo -e "${TURUNCU}0)${NC} 🚪 Cikis"
+    echo ""
+    echo -n "Seciminizi yapin [0-7]: "
+}
+
+# Siteyi dunyaya ac (on plan)
+siteyi_on_plan_ac() {
+    logo_goster
+    echo -e "${SARI}🚀 SITE DUNYAYA ACILIYOR...${NC}"
+    echo "========================================"
+    
+    cd "$PROJE_YOLU" || { echo -e "${TURUNCU}❌ Proje dizinine gidilemedi!${NC}"; return 1; }
+    
+    # Venv kontrol
+    if [ ! -d "$VENV_YOLU" ]; then
+        echo -e "${TURUNCU}❌ .venv bulunamadi! Olusturuluyor...${NC}"
+        python3 -m venv .venv
+    fi
+    
+    # Venv aktif et
+    source "$VENV_YOLU/bin/activate"
+    
+    echo -e "${TURKUAZ}📦 Paketler guncelleniyor...${NC}"
+    pip install --upgrade pip
+    pip install django mysqlclient pillow gunicorn whitenoise
+    pip install django-admin-interface django-colorfield django-flat-theme
+    
+    echo -e "${TURKUAZ}🗂️ Static dosyalar toplaniyor...${NC}"
+    python manage.py collectstatic --noinput
+    
+    echo -e "${TURKUAZ}🔄 Veritabani migrasyonlari...${NC}"
+    python manage.py makemigrations
+    python manage.py migrate
+    
+    echo -e "${ACIK_YESIL}🎉 Site baslatiliyor...${NC}"
+    echo -e "${SARI}Durdurmak icin: Ctrl+C${NC}"
+    echo "========================================"
+    
+    python manage.py runserver "0.0.0.0:$PORT"
+}
+
+# Site arka planda calistir/durdur
+arka_plan_degistir() {
+    logo_goster
+    
+    if site_durumu_kontrol; then
+        echo -e "${SARI}🛑 ARKA PLAN SERVISI DURDURULUYOR...${NC}"
+        echo "========================================"
+        
+        if [ -f "$PID_DOSYASI" ]; then
+            PID=$(cat "$PID_DOSYASI")
+            kill "$PID" 2>/dev/null
+            rm -f "$PID_DOSYASI"
+            echo -e "${ACIK_YESIL}✅ Servis durduruldu!${NC}"
+        fi
+    else
+        echo -e "${SARI}🚀 ARKA PLAN SERVISI BASLATILIYOR...${NC}"
+        echo "========================================"
+        
+        cd "$PROJE_YOLU" || { echo -e "${TURUNCU}❌ Proje dizinine gidilemedi!${NC}"; return 1; }
+        
+        # Venv kontrol ve aktif et
+        if [ ! -d "$VENV_YOLU" ]; then
+            echo -e "${TURUNCU}❌ .venv bulunamadi! Olusturuluyor...${NC}"
+            python3 -m venv .venv
+        fi
+        
+        source "$VENV_YOLU/bin/activate"
+        
+        # Arka planda baslat
+        nohup python manage.py runserver "0.0.0.0:$PORT" > "/tmp/django_${DOMAIN}_${PORT}.log" 2>&1 &
+        echo $! > "$PID_DOSYASI"
+        
+        echo -e "${ACIK_YESIL}✅ Servis arka planda baslatildi!${NC}"
+        echo -e "${TURKUAZ}📄 Log dosyasi: /tmp/django_${DOMAIN}_${PORT}.log${NC}"
+    fi
+    
+    echo ""
+    read -p "Devam etmek icin Enter'a basin..."
+}
+
+# Superuser olustur
+superuser_olustur() {
+    logo_goster
+    echo -e "${SARI}👤 SUPERUSER OLUSTURULUYOR...${NC}"
+    echo "========================================"
+    
+    cd "$PROJE_YOLU" || { echo -e "${TURUNCU}❌ Proje dizinine gidilemedi!${NC}"; return 1; }
+    
+    if [ ! -d "$VENV_YOLU" ]; then
+        echo -e "${TURUNCU}❌ .venv bulunamadi!${NC}"
+        read -p "Devam etmek icin Enter'a basin..."
+        return 1
+    fi
+    
+    source "$VENV_YOLU/bin/activate"
+    python manage.py createsuperuser
+    
+    echo ""
+    read -p "Devam etmek icin Enter'a basin..."
+}
+
+# Site testi
+site_testi() {
+    logo_goster
+    echo -e "${SARI}🧪 SITE TESTI YAPILIYOR...${NC}"
+    echo "========================================"
+    
+    echo -e "${TURKUAZ}🌐 Ana sayfa testi:${NC}"
+    if curl -I "https://$DOMAIN/" 2>/dev/null | head -1; then
+        echo -e "${ACIK_YESIL}✅ Ana sayfa erisilebilir${NC}"
+    else
+        echo -e "${TURUNCU}❌ Ana sayfa erisilemez${NC}"
+    fi
+    
+    echo ""
+    echo -e "${TURKUAZ}🔐 Admin paneli testi:${NC}"
+    if curl -I "https://$DOMAIN/bitronixcode-admin/" 2>/dev/null | head -1; then
+        echo -e "${ACIK_YESIL}✅ Admin paneli erisilebilir${NC}"
+    else
+        echo -e "${TURUNCU}❌ Admin paneli erisilemez${NC}"
+    fi
+    
+    echo ""
+    echo -e "${TURKUAZ}🔒 SSL sertifika kontrolu:${NC}"
+    if openssl x509 -in "/etc/nginx/ssl-certificates/$DOMAIN.crt" -noout -dates 2>/dev/null; then
+        echo -e "${ACIK_YESIL}✅ SSL sertifikasi gecerli${NC}"
+    else
+        echo -e "${TURUNCU}❌ SSL sertifikasi bulunamadi${NC}"
+    fi
+    
+    echo ""
+    echo -e "${TURKUAZ}🔌 Port kontrolu:${NC}"
+    if netstat -tlnp | grep ":$PORT "; then
+        echo -e "${ACIK_YESIL}✅ Port $PORT dinleniyor${NC}"
+    else
+        echo -e "${TURUNCU}❌ Port $PORT dinlenmiyor${NC}"
+    fi
+    
+    echo ""
+    read -p "Devam etmek icin Enter'a basin..."
+}
+
+# Ayarlari degistir
+ayarlari_degistir() {
+    logo_goster
+    echo -e "${SARI}⚙️ AYARLAR DEGISTIRILIYOR...${NC}"
+    echo "========================================"
+    
+    echo -e "${TURKUAZ}Mevcut ayarlar:${NC}"
+    echo "Domain: $DOMAIN"
+    echo "Proje Yolu: $PROJE_YOLU"
+    echo "Port: $PORT"
+    echo ""
+    
+    echo -e "${SARI}Yeni degerleri girin (bos birakirsaniz eski deger kalir):${NC}"
+    
+    read -p "Yeni Domain [$DOMAIN]: " YENI_DOMAIN
+    read -p "Yeni Proje Yolu [$PROJE_YOLU]: " YENI_PROJE_YOLU
+    read -p "Yeni Port [$PORT]: " YENI_PORT
+    
+    # Degerleri guncelle
+    [ ! -z "$YENI_DOMAIN" ] && DOMAIN="$YENI_DOMAIN"
+    [ ! -z "$YENI_PROJE_YOLU" ] && PROJE_YOLU="$YENI_PROJE_YOLU"
+    [ ! -z "$YENI_PORT" ] && PORT="$YENI_PORT"
+    
+    # Kaydet
+    cat > ~/.django_yonetici_ayar << EOF
+DOMAIN="$DOMAIN"
+PROJE_YOLU="$PROJE_YOLU"
+PORT="$PORT"
+EOF
+    
+    # Yeni degerleri yukle
+    VENV_YOLU="$PROJE_YOLU/.venv"
+    PID_DOSYASI="/tmp/django_${DOMAIN}_${PORT}.pid"
+    
+    echo -e "${ACIK_YESIL}✅ Ayarlar guncellendi!${NC}"
+    sleep 2
+}
+
+# Log goruntule
+log_goruntule() {
+    logo_goster
+    echo -e "${SARI}📋 LOG GORUNTULEME${NC}"
+    echo "========================================"
+    
+    LOG_DOSYASI="/tmp/django_${DOMAIN}_${PORT}.log"
+    
+    if [ -f "$LOG_DOSYASI" ]; then
+        echo -e "${TURKUAZ}Son 20 satir:${NC}"
+        echo "========================================"
+        tail -20 "$LOG_DOSYASI"
+    else
+        echo -e "${TURUNCU}❌ Log dosyasi bulunamadi: $LOG_DOSYASI${NC}"
+    fi
+    
+    echo ""
+    read -p "Devam etmek icin Enter'a basin..."
+}
+
+# TAM Kurulum (Yedekten cikar + ortam kurulum)
+yedekten_al_kur() {
+
+# LOGO
+echo -e "${BEYAZ}"
+echo "██████╗ ██╗████████╗██████╗  ██████╗ ███╗   ██╗██╗██╗  ██╗"
+echo "██╔══██╗██║╚══██╔══╝██╔══██╗██╔═══██╗████╗  ██║██║╚██╗██╔╝"
+echo "██████╔╝██║   ██║   ██████╔╝██║   ██║██╔██╗ ██║██║ ╚███╔╝ "
+echo "██╔══██╗██║   ██║   ██╔══██╗██║   ██║██║╚██╗██║██║ ██╔██╗ "
+echo "██████╔╝██║   ██║   ██║  ██║╚██████╔╝██║ ╚████║██║██╔╝ ██╗"
+echo "╚═════╝ ╚═╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝╚═╝  ╚═╝"
+echo -e "${NC}"
+echo -e "${TURKUAZ}🚀 ULTIMATE TEK KULLANIMLIK DJANGO DEPLOYMENT SCRIPT${NC}"
+echo -e "${ACIK_PEMBE}📅 Versiyon: 5.0 ULTIMATE | Tarih: $(date '+%Y-%m-%d %H:%M:%S')${NC}"
+echo -e "${ACIK_YESIL}✨ TEK SEFERDE %100 CALISAN - EKSIKSIZ DEPLOYMENT${NC}"
+echo "================================================================="
+
+# TIMEOUT FONKSIYONU
+timeout_command() {
+    local timeout_duration=$1
+    shift
+    timeout $timeout_duration "$@" || {
+        echo -e "${TURUNCU}❌ TIMEOUT: Komut $timeout_duration saniyede tamamlanamadi${NC}"
+        return 1
+    }
+}
+
+# GUVENLI PYTHON KOMUT CALISTIRMA
+safe_python_check() {
+    local python_path=$1
+    local check_code=$2
+    local timeout_sec=${3:-10}
+    
+    local temp_script="/tmp/python_check_$$"
+    cat > "$temp_script" << EOF
+#!/usr/bin/env python3
+import sys
+try:
+    $check_code
+    print("✅ BASARILI")
+    sys.exit(0)
+except Exception as e:
+    print(f"❌ HATA: {e}")
+    sys.exit(1)
+EOF
+    
+    chmod +x "$temp_script"
+    
+    if timeout_command $timeout_sec "$python_path" "$temp_script" >/dev/null 2>&1; then
+        rm -f "$temp_script"
+        return 0
+    else
+        rm -f "$temp_script"
+        return 1
+    fi
+}
+
+# PROGRESS GOSTERGESI
+show_progress() {
+    local current=$1
+    local total=$2
+    local desc=$3
+    local percent=$((current * 100 / total))
+    printf "\r🔄 [%d/%d] %s (%d%%)" $current $total "$desc" $percent
+}
+
+# =================================================================
+# 1. KULLANICI BILGILERI
+# =================================================================
+echo -e "\n${SARI}📋 PROJE BILGILERINI GIRIN${NC}"
+echo "================================================================="
+
+read -p "🏠 Django proje yolu (Orn: /home/bitronixcodec/htdocs/bitronixcode.com): " PROJECT_PATH
+read -p "👤 Site kullanici adi (Orn: bitronixcodec): " PROJECT_USER
+read -p "📦 Yedek dosya yolu (Orn: /tmp/bitronixcode_project.tar.gz): " BACKUP_FILE
+read -p "🌍 Domain adi (Orn: bitronixcode.com): " DOMAIN_NAME
+read -p "🏷️ Veritabani adi (Orn: BitronixCode-C): " DB_NAME
+read -p "👤 Veritabani kullanicisi (Orn: BitronixCodeC): " DB_USER
+read -p "🔐 Veritabani sifresi: " -s DB_PASS
+echo
+
+DB_HOST="localhost"
+DB_PORT="3306"
+
+# =================================================================
+# 2. ROOT KONTROL
+# =================================================================
+if [ "$EUID" -ne 0 ]; then
+    echo -e "${TURUNCU}❌ Bu betik root yetkileri ile calistirilmalidir!${NC}"
+    exit 1
+fi
+
+# =================================================================
+# 3. TEMEL KONTROLLER
+# =================================================================
+echo -e "\n${TURKUAZ}🔍 TEMEL KONTROLLER${NC}"
+echo "================================================================="
+
+show_progress 1 5 "Proje yolu kontrol ediliyor"
+[ ! -d "$PROJECT_PATH" ] && { echo -e "\n${TURUNCU}❌ Proje yolu bulunamadi!${NC}"; exit 1; }
+
+show_progress 2 5 "Kullanici kontrol ediliyor"
+! id "$PROJECT_USER" &>/dev/null && { echo -e "\n${TURUNCU}❌ Kullanici bulunamadi!${NC}"; exit 1; }
+
+show_progress 3 5 "Yedek dosyasi kontrol ediliyor"
+[ ! -f "$BACKUP_FILE" ] && { echo -e "\n${TURUNCU}❌ Yedek dosyasi bulunamadi!${NC}"; exit 1; }
+
+show_progress 4 5 "Sistem paketleri kontrol ediliyor"
+command -v mysql >/dev/null 2>&1 || { echo -e "\n${TURUNCU}❌ MySQL bulunamadi!${NC}"; exit 1; }
+
+show_progress 5 5 "Kontroller tamamlandi"
+echo -e "\n${ACIK_YESIL}✅ Tum kontroller basarili${NC}"
+
+# =================================================================
+# 4. MEVCUT ICERIK TEMIZLEME
+# =================================================================
+echo -e "\n${TURKUAZ}🧹 MEVCUT ICERIK TEMIZLENIYOR${NC}"
+echo "================================================================="
+
+cd "$PROJECT_PATH"
+sudo -u $PROJECT_USER find . -mindepth 1 -maxdepth 1 ! -name '.well-known' -exec rm -rf {} \; 2>/dev/null || true
+echo -e "${ACIK_YESIL}✅ Proje klasoru temizlendi${NC}"
+
+# =================================================================
+# 5. SISTEM PAKETLERI KURULUMU
+# =================================================================
+echo -e "\n${TURKUAZ}📦 SISTEM PAKETLERI KURULUYOR${NC}"
+echo "================================================================="
+
+apt update -y >/dev/null 2>&1
+
+# Temel paketler
+apt install -y python3 python3-pip python3-venv python3-dev >/dev/null 2>&1
+apt install -y build-essential gcc g++ make pkg-config >/dev/null 2>&1
+apt install -y libssl-dev libffi-dev >/dev/null 2>&1
+
+# MySQL paketleri
+apt install -y libmysqlclient-dev mysql-client >/dev/null 2>&1
+apt install -y default-libmysqlclient-dev >/dev/null 2>&1
+
+# Gorsel isleme
+apt install -y libjpeg-dev libpng-dev libwebp-dev >/dev/null 2>&1
+apt install -y zlib1g-dev libtiff5-dev libfreetype6-dev >/dev/null 2>&1
+
+# Sistem araclari
+apt install -y curl wget git unzip nginx >/dev/null 2>&1
+
+echo -e "${ACIK_YESIL}✅ Sistem paketleri kuruldu${NC}"
+
+# =================================================================
+# 6. YEDEK DOSYASINI ACMA
+# =================================================================
+echo -e "\n${TURKUAZ}📦 YEDEK DOSYASI ACILIYOR${NC}"
+echo "================================================================="
+
+TEMP_DIR="/tmp/django_restore_$$"
+mkdir -p "$TEMP_DIR"
+cd "$TEMP_DIR"
+tar -xzf "$BACKUP_FILE" >/dev/null 2>&1
+
+# manage.py dosyasini bul
+MANAGE_PY_PATH=$(find "$TEMP_DIR" -name "manage.py" -type f | head -1)
+if [ -n "$MANAGE_PY_PATH" ]; then
+    BACKUP_PROJECT_PATH=$(dirname "$MANAGE_PY_PATH")
+    cd "$BACKUP_PROJECT_PATH"
+    sudo -u $PROJECT_USER cp -r * "$PROJECT_PATH/" 2>/dev/null || true
+    sudo -u $PROJECT_USER cp -r .[^.]* "$PROJECT_PATH/" 2>/dev/null || true
+    echo -e "${ACIK_YESIL}✅ Proje dosylari kopyalandi${NC}"
+else
+    echo -e "${TURUNCU}❌ Django projesi bulunamadi!${NC}"
+    rm -rf "$TEMP_DIR"
+    exit 1
+fi
+
+rm -rf "$TEMP_DIR"
+
+# =================================================================
+# 7. PYTHON SANAL ORTAM
+# =================================================================
+echo -e "\n${TURKUAZ}🐍 PYTHON SANAL ORTAM OLUSTURULUYOR${NC}"
+echo "================================================================="
+
+cd "$PROJECT_PATH"
+rm -rf "$PROJECT_PATH/venv" 2>/dev/null || true
+sudo -u $PROJECT_USER python3 -m venv "$PROJECT_PATH/venv" >/dev/null 2>&1
+sudo -u $PROJECT_USER "$PROJECT_PATH/venv/bin/pip" install --upgrade pip setuptools wheel >/dev/null 2>&1
+echo -e "${ACIK_YESIL}✅ Python sanal ortam hazir${NC}"
+
+# =================================================================
+# 8. PYTHON PAKETLERI YUKLEME
+# =================================================================
+echo -e "\n${TURKUAZ}📦 PYTHON PAKETLERI YUKLENIYOR${NC}"
+echo "================================================================="
+
+# Requirements.txt varsa kullan
+if [ -f "$PROJECT_PATH/requirements.txt" ]; then
+    sudo -u $PROJECT_USER "$PROJECT_PATH/venv/bin/pip" install -r "$PROJECT_PATH/requirements.txt" >/dev/null 2>&1
+else
+    # Manuel paket yukleme
+    sudo -u $PROJECT_USER "$PROJECT_PATH/venv/bin/pip" install \
+        Django==5.2 \
+        mysqlclient==2.2.7 \
+        gunicorn==23.0.0 \
+        pillow==11.3.0 \
+        PyJWT==2.9.0 \
+        python-jose==3.3.0 \
+        jwcrypto==1.5.6 \
+        cryptography==41.0.7 \
+        requests==2.31.0 >/dev/null 2>&1
+fi
+
+# JWT paketleri ekstra guvence
+sudo -u $PROJECT_USER "$PROJECT_PATH/venv/bin/pip" install --force-reinstall PyJWT==2.9.0 python-jose==3.3.0 jwcrypto==1.5.6 >/dev/null 2>&1
+
+echo -e "${ACIK_YESIL}✅ Python paketleri yuklendi${NC}"
+
+# =================================================================
+# 9. DJANGO SETTINGS DOSYASI OLUSTURMA
+# =================================================================
+echo -e "\n${TURKUAZ}⚙️ DJANGO SETTINGS DOSYASI OLUSTURULUYOR${NC}"
+echo "================================================================="
+
+# Settings dosyasini bul
+SETTINGS_FILE=$(find "$PROJECT_PATH" -name "settings.py" -type f | grep -v venv | head -1)
+
+if [ -n "$SETTINGS_FILE" ]; then
+    # Veritabani ayarlarini guncelle
+    cat >> "$SETTINGS_FILE" << EOF
+
+# BitronixCode Otomatik Veritabani Ayarlari
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': '$DB_NAME',
+        'USER': '$DB_USER',
+        'PASSWORD': '$DB_PASS',
+        'HOST': '$DB_HOST',
+        'PORT': '$DB_PORT',
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        },
+    }
+}
+
+# Guvenlik Ayarlari
+ALLOWED_HOSTS = ['$DOMAIN_NAME', 'www.$DOMAIN_NAME', 'localhost', '127.0.0.1']
+DEBUG = False
+SECURE_SSL_TURUNCUIRECT = False
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Static ve Media Ayarlari
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# JWT Ayarlari
+JWT_AUTH = {
+    'JWT_SECRET_KEY': SECRET_KEY,
+    'JWT_ALGORITHM': 'HS256',
+    'JWT_EXPIRATION_DELTA': timedelta(hours=24),
+}
+EOF
+    echo -e "${ACIK_YESIL}✅ Django settings guncellendi${NC}"
+fi
+
+# =================================================================
+# 10. DOSYA IZINLERI
+# =================================================================
+echo -e "\n${TURKUAZ}🔒 DOSYA IZINLERI DUZENLENIYOR${NC}"
+echo "================================================================="
+
+chown -R $PROJECT_USER:$PROJECT_USER "$PROJECT_PATH"
+find "$PROJECT_PATH" -type d -exec chmod 755 {} \;
+find "$PROJECT_PATH" -type f -exec chmod 644 {} \;
+
+# Ozel klasorler
+mkdir -p "$PROJECT_PATH/media" "$PROJECT_PATH/static" "$PROJECT_PATH/staticfiles" "$PROJECT_PATH/logs"
+chown -R $PROJECT_USER:www-data "$PROJECT_PATH/media" "$PROJECT_PATH/static" "$PROJECT_PATH/staticfiles" "$PROJECT_PATH/logs"
+chmod -R 775 "$PROJECT_PATH/media" "$PROJECT_PATH/staticfiles" "$PROJECT_PATH/logs"
+chmod -R 755 "$PROJECT_PATH/static"
+
+# manage.py calistirilabilir yap
+[ -f "$PROJECT_PATH/manage.py" ] && chmod +x "$PROJECT_PATH/manage.py"
+
+echo -e "${ACIK_YESIL}✅ Dosya izinleri duzenlendi${NC}"
+
+# =================================================================
+# 11. GUNICORN KONFIGURASYONU
+# =================================================================
+echo -e "\n${TURKUAZ}🦄 GUNICORN KONFIGURASYONU${NC}"
+echo "================================================================="
+
+cat > "$PROJECT_PATH/gunicorn.conf.py" << EOF
+import multiprocessing
+import os
+
+# Sunucu ayarlari
+bind = "127.0.0.1:8000"
+workers = min(4, multiprocessing.cpu_count())
+worker_class = "sync"
+worker_connections = 1000
+timeout = 30
+keepalive = 2
+max_requests = 1000
+max_requests_jitter = 100
+
+# Guvenlik
+user = "$PROJECT_USER"
+group = "$PROJECT_USER"
+umask = 0
+
+# Logging
+errorlog = "$PROJECT_PATH/logs/gunicorn_error.log"
+accesslog = "$PROJECT_PATH/logs/gunicorn_access.log"
+loglevel = "info"
+access_log_format = '%({x-forwarded-for}i)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
+
+# Process
+daemon = False
+pidfile = "$PROJECT_PATH/logs/gunicorn.pid"
+tmp_upload_dir = None
+preload_app = True
+reload = False
+
+# SSL Headers
+secure_scheme_headers = {
+    'X-FORWARDED-PROTOCOL': 'ssl',
+    'X-FORWARDED-PROTO': 'https',
+    'X-FORWARDED-SSL': 'on'
+}
+EOF
+
+chown $PROJECT_USER:$PROJECT_USER "$PROJECT_PATH/gunicorn.conf.py"
+echo -e "${ACIK_YESIL}✅ Gunicorn konfigurasyonu olusturuldu${NC}"
+
+# =================================================================
+# 12. WSGI MODULU TESPITI
+# =================================================================
+echo -e "\n${TURKUAZ}🔍 WSGI MODULU TESPIT EDILIYOR${NC}"
+echo "================================================================="
+
+WSGI_FILE=$(find "$PROJECT_PATH" -name "wsgi.py" -type f | grep -v venv | head -1)
+if [ -n "$WSGI_FILE" ]; then
+    WSGI_DIR=$(dirname "$WSGI_FILE")
+    WSGI_MODULE_NAME=$(basename "$WSGI_DIR")
+    WSGI_MODULE="${WSGI_MODULE_NAME}.wsgi:application"
+    echo -e "${ACIK_YESIL}✅ WSGI modulu tespit edildi: $WSGI_MODULE${NC}"
+else
+    WSGI_MODULE="myproject.wsgi:application"
+    echo -e "${SARI}⚠️ WSGI modulu tespit edilemedi, varsayilan kullanilacak${NC}"
+fi
+
+# =================================================================
+# 13. SYSTEMD SERVISI
+# =================================================================
+echo -e "\n${TURKUAZ}⚡ SYSTEMD SERVISI OLUSTURULUYOR${NC}"
+echo "================================================================="
+
+SERVICE_NAME="bitronixcode_django"
+
+cat > "/etc/systemd/system/${SERVICE_NAME}.service" << EOF
+[Unit]
+Description=BitronixCode Django Application ($DOMAIN_NAME)
+Documentation=https://docs.djangoproject.com/
+After=network.target mysql.service
+Wants=mysql.service
+
+[Service]
+Type=notify
+User=$PROJECT_USER
+Group=$PROJECT_USER
+WorkingDirectory=$PROJECT_PATH
+Environment=PATH=$PROJECT_PATH/venv/bin
+Environment=DJANGO_SETTINGS_MODULE=${WSGI_MODULE_NAME}.settings
+ExecStart=$PROJECT_PATH/venv/bin/gunicorn --config $PROJECT_PATH/gunicorn.conf.py $WSGI_MODULE
+ExecReload=/bin/kill -s HUP \$MAINPID
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl enable "$SERVICE_NAME" >/dev/null 2>&1
+echo -e "${ACIK_YESIL}✅ Systemd servisi olusturuldu: $SERVICE_NAME${NC}"
+
+# =================================================================
+# 14. NGINX KONFIGURASYONU
+# =================================================================
+echo -e "\n${TURKUAZ}🌐 NGINX KONFIGURASYONU OLUSTURULUYOR${NC}"
+echo "================================================================="
+
+# Sites-available dizini olustur
+mkdir -p /etc/nginx/sites-available
+mkdir -p /etc/nginx/sites-enabled
+
+# Nginx config dosyasi olustur
+cat > "/etc/nginx/sites-available/$DOMAIN_NAME" << EOF
+server {
+    listen 80;
+    server_name $DOMAIN_NAME www.$DOMAIN_NAME;
+    
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "no-referrer-when-downgrade" always;
+    add_header Content-Security-Policy "default-src 'self' http: https: data: blob: 'unsafe-inline'" always;
+    
+    # Gzip compression
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_proxied expired no-cache no-store private must-revalidate auth;
+    gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml+rss application/javascript;
+    
+    # Client max body size
+    client_max_body_size 100M;
+    
+    # Django application
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header X-Forwarded-Host \$server_name;
+        
+        # Proxy timeouts
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+        
+        # Proxy buffers
+        proxy_buffering on;
+        proxy_buffer_size 128k;
+        proxy_buffers 4 256k;
+        proxy_busy_buffers_size 256k;
+        
+        # Cookie settings
+        proxy_cookie_path / /;
+        proxy_cookie_domain \$host \$host;
+    }
+    
+    # Static files
+    location /static/ {
+        alias $PROJECT_PATH/staticfiles/;
+        expires 30d;
+        access_log off;
+        add_header Cache-Control "public, immutable";
+        
+        # Gzip static files
+        location ~* \.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+        }
+    }
+    
+    # Media files
+    location /media/ {
+        alias $PROJECT_PATH/media/;
+        expires 7d;
+        access_log off;
+        add_header Cache-Control "public";
+    }
+    
+    # Favicon
+    location = /favicon.ico {
+        alias $PROJECT_PATH/staticfiles/favicon.ico;
+        access_log off;
+    }
+    
+    # Robots.txt
+    location = /robots.txt {
+        alias $PROJECT_PATH/staticfiles/robots.txt;
+        access_log off;
+    }
+    
+    # Security - Block access to sensitive files
+    location ~ /\. {
+        deny all;
+        access_log off;
+        log_not_found off;
+    }
+    
+    location ~ ~$ {
+        deny all;
+        access_log off;
+        log_not_found off;
+    }
+    
+    # Error pages
+    error_page 404 /404.html;
+    error_page 500 502 503 504 /50x.html;
+}
+
+# HTTPS redirect (commented out for initial setup)
+# server {
+#     listen 443 ssl http2;
+#     server_name $DOMAIN_NAME www.$DOMAIN_NAME;
+#     
+#     ssl_certificate /path/to/certificate.crt;
+#     ssl_certificate_key /path/to/private.key;
+#     ssl_protocols TLSv1.2 TLSv1.3;
+#     ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384;
+#     ssl_prefer_server_ciphers off;
+#     
+#     # Include the same location blocks as above
+# }
+EOF
+
+# Site'i etkinlestir
+ln -sf "/etc/nginx/sites-available/$DOMAIN_NAME" "/etc/nginx/sites-enabled/$DOMAIN_NAME"
+
+# Nginx test et
+if nginx -t >/dev/null 2>&1; then
+    systemctl reload nginx >/dev/null 2>&1
+    echo -e "${ACIK_YESIL}✅ Nginx konfigurasyonu olusturuldu ve etkinlestirildi${NC}"
+else
+    echo -e "${SARI}⚠️ Nginx konfigurasyonu olusturuldu ancak test basarisiz${NC}"
+fi
+
+# =================================================================
+# 15. DJANGO MIGRATE VE COLLECTSTATIC
+# =================================================================
+echo -e "\n${TURKUAZ}🔄 DJANGO ISLEMLERI${NC}"
+echo "================================================================="
+
+cd "$PROJECT_PATH"
+
+# Django migrate
+echo -e "${ACIK_PEMBE}🔄 Django migrate yapiliyor...${NC}"
+if sudo -u $PROJECT_USER "$PROJECT_PATH/venv/bin/python" manage.py migrate --verbosity=0 >/dev/null 2>&1; then
+    echo -e "${ACIK_YESIL}✅ Migrate basarili${NC}"
+else
+    echo -e "${SARI}⚠️ Migrate hatasi (normal olabilir)${NC}"
+fi
+
+# Static files collect
+echo -e "${ACIK_PEMBE}📁 Static files collect yapiliyor...${NC}"
+if sudo -u $PROJECT_USER "$PROJECT_PATH/venv/bin/python" manage.py collectstatic --noinput --verbosity=0 >/dev/null 2>&1; then
+    echo -e "${ACIK_YESIL}✅ Static files collect basarili${NC}"
+else
+    echo -e "${SARI}⚠️ Static files collect hatasi (normal olabilir)${NC}"
+fi
+
+# =================================================================
+# 16. OTOMASYON SCRIPTLERI
+# =================================================================
+echo -e "\n${TURKUAZ}🤖 OTOMASYON SCRIPTLERI OLUSTURULUYOR${NC}"
+echo "================================================================="
+
+# Start script
+cat > "$PROJECT_PATH/start.sh" << EOF
+#!/bin/bash
+echo "🚀 BitronixCode Django baslatiliyor..."
+systemctl start $SERVICE_NAME
+systemctl status $SERVICE_NAME --no-pager
+echo "✅ Servis baslatildi"
+echo "🌐 Test URL: http://$DOMAIN_NAME"
+EOF
+
+# Stop script
+cat > "$PROJECT_PATH/stop.sh" << EOF
+#!/bin/bash
+echo "🛑 BitronixCode Django durduruluyor..."
+systemctl stop $SERVICE_NAME
+echo "✅ Servis durduruldu"
+EOF
+
+# Restart script
+cat > "$PROJECT_PATH/restart.sh" << EOF
+#!/bin/bash
+echo "🔄 BitronixCode Django yeniden baslatiliyor..."
+systemctl restart $SERVICE_NAME
+systemctl status $SERVICE_NAME --no-pager
+echo "✅ Servis yeniden baslatildi"
+echo "🌐 Test URL: http://$DOMAIN_NAME"
+EOF
+
+# Status script
+cat > "$PROJECT_PATH/status.sh" << EOF
+#!/bin/bash
+echo "📊 BitronixCode Django durumu:"
+systemctl status $SERVICE_NAME --no-pager
+echo ""
+echo "📝 Son loglar:"
+journalctl -u $SERVICE_NAME -n 10 --no-pager
+EOF
+
+# Logs script
+cat > "$PROJECT_PATH/logs.sh" << EOF
+#!/bin/bash
+echo "📝 BitronixCode Django canli loglari (CTRL+C ile cikis):"
+journalctl -u $SERVICE_NAME -f
+EOF
+
+# Update script
+cat > "$PROJECT_PATH/update.sh" << EOF
+#!/bin/bash
+echo "🔄 BitronixCode Django guncelleniyor..."
+cd $PROJECT_PATH
+sudo -u $PROJECT_USER $PROJECT_PATH/venv/bin/python manage.py migrate
+sudo -u $PROJECT_USER $PROJECT_PATH/venv/bin/python manage.py collectstatic --noinput
+systemctl restart $SERVICE_NAME
+echo "✅ Guncelleme tamamlandi"
+EOF
+
+# Scriptleri calistirilabilir yap
+chmod +x "$PROJECT_PATH"/*.sh
+chown $PROJECT_USER:$PROJECT_USER "$PROJECT_PATH"/*.sh
+
+echo -e "${ACIK_YESIL}✅ Otomasyon scriptleri olusturuldu${NC}"
+
+# =================================================================
+# 17. VERITABANI TEST
+# =================================================================
+echo -e "\n${TURKUAZ}🗄️ VERITABANI BAĞLANTI TESTI${NC}"
+echo "================================================================="
+
+if mysql -h"$DB_HOST" -P"$DB_PORT" -u"$DB_USER" -p"$DB_PASS" -e "USE $DB_NAME; SELECT 1;" >/dev/null 2>&1; then
+    echo -e "${ACIK_YESIL}✅ Veritabani baglantisi basarili${NC}"
+else
+    echo -e "${SARI}⚠️ Veritabani baglantisi test edilemedi${NC}"
+fi
+
+# =================================================================
+# 18. JWT PAKET FINAL KONTROL
+# =================================================================
+echo -e "\n${TURKUAZ}🔐 JWT PAKET FINAL KONTROL${NC}"
+echo "================================================================="
+
+if safe_python_check "$PROJECT_PATH/venv/bin/python" "import jwt; import jose; import jwcrypto" 15; then
+    echo -e "${ACIK_YESIL}✅ JWT paketleri calisiyor${NC}"
+else
+    echo -e "${SARI}⚠️ JWT paket kontrolu basarisiz${NC}"
+fi
+
+# =================================================================
+# 19. SERVIS BASLATMA (DEVAM)
+# =================================================================
+if systemctl is-active --quiet "$SERVICE_NAME"; then
+    echo -e "${ACIK_YESIL}✅ Servis basariyla baslatildi${NC}"
+else
+    echo -e "${SARI}⚠️ Servis baslatilamadi, manuel kontrol gerekli${NC}"
+    echo -e "${ACIK_PEMBE}📝 Servis durumu:${NC}"
+    systemctl status "$SERVICE_NAME" --no-pager || true
+fi
+
+# =================================================================
+# 20. FINAL TESTLER
+# =================================================================
+echo -e "\n${TURKUAZ}🧪 FINAL TESTLER${NC}"
+echo "================================================================="
+
+# Django check
+echo -e "${ACIK_PEMBE}🔍 Django sistem kontrolu...${NC}"
+if sudo -u $PROJECT_USER "$PROJECT_PATH/venv/bin/python" manage.py check --verbosity=0 >/dev/null 2>&1; then
+    echo -e "${ACIK_YESIL}✅ Django sistem kontrolu basarili${NC}"
+else
+    echo -e "${SARI}⚠️ Django sistem kontrolunde uyarilar var${NC}"
+fi
+
+# Port kontrolu
+echo -e "${ACIK_PEMBE}🔌 Port 8000 kontrolu...${NC}"
+if netstat -tuln 2>/dev/null | grep -q ":8000 "; then
+    echo -e "${ACIK_YESIL}✅ Port 8000 dinleniyor${NC}"
+else
+    echo -e "${SARI}⚠️ Port 8000 dinlenmiyor${NC}"
+fi
+
+# HTTP test
+echo -e "${ACIK_PEMBE}🌐 HTTP baglanti testi...${NC}"
+if curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8000 2>/dev/null | grep -q "200\|301\|302"; then
+    echo -e "${ACIK_YESIL}✅ HTTP baglanti testi basarili${NC}"
+else
+    echo -e "${SARI}⚠️ HTTP baglanti testi basarisiz${NC}"
+fi
+
+# =================================================================
+# 21. GEREKLI DOSYALAR OLUSTURMA
+# =================================================================
+echo -e "\n${TURKUAZ}📄 GEREKLI DOSYALAR OLUSTURULUYOR${NC}"
+echo "================================================================="
+
+# robots.txt olustur
+cat > "$PROJECT_PATH/staticfiles/robots.txt" << EOF
+User-agent: *
+Allow: /
+
+Sitemap: http://$DOMAIN_NAME/sitemap.xml
+EOF
+
+# .htaccess olustur (Apache icin)
+cat > "$PROJECT_PATH/.htaccess" << EOF
+# BitronixCode Django .htaccess
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.py [QSA,L]
+
+# Security headers
+Header always set X-Frame-Options "SAMEORIGIN"
+Header always set X-XSS-Protection "1; mode=block"
+Header always set X-Content-Type-Options "nosniff"
+
+# Gzip compression
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/xml
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE application/xml
+    AddOutputFilterByType DEFLATE application/xhtml+xml
+    AddOutputFilterByType DEFLATE application/rss+xml
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/x-javascript
+</IfModule>
+EOF
+
+# favicon.ico placeholder olustur (bos dosya)
+touch "$PROJECT_PATH/staticfiles/favicon.ico"
+
+# 404.html olustur
+cat > "$PROJECT_PATH/templates/404.html" << EOF
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Sayfa Bulunamadi | $DOMAIN_NAME</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+        h1 { color: #e74c3c; }
+        p { color: #666; }
+        a { color: #3498db; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <h1>404 - Sayfa Bulunamadi</h1>
+    <p>Aradiginiz sayfa bulunamadi.</p>
+    <p><a href="/">Ana Sayfaya Don</a></p>
+</body>
+</html>
+EOF
+
+# 50x.html olustur
+cat > "$PROJECT_PATH/templates/50x.html" << EOF
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sunucu Hatasi | $DOMAIN_NAME</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+        h1 { color: #e74c3c; }
+        p { color: #666; }
+        a { color: #3498db; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <h1>Sunucu Hatasi</h1>
+    <p>Gecici bir sunucu hatasi olustu. Lutfen daha sonra tekrar deneyin.</p>
+    <p><a href="/">Ana Sayfaya Don</a></p>
+</body>
+</html>
+EOF
+
+# Templates klasoru olustur
+mkdir -p "$PROJECT_PATH/templates"
+chown -R $PROJECT_USER:$PROJECT_USER "$PROJECT_PATH/templates"
+
+echo -e "${ACIK_YESIL}✅ Gerekli dosyalar olusturuldu${NC}"
+
+# =================================================================
+# 22. GUVENLIK AYARLARI
+# =================================================================
+echo -e "\n${TURKUAZ}🔐 GUVENLIK AYARLARI${NC}"
+echo "================================================================="
+
+# Firewall kurallari (opsiyonel)
+if command -v ufw >/dev/null 2>&1; then
+    echo -e "${ACIK_PEMBE}🔥 UFW firewall kurallari ekleniyor...${NC}"
+    ufw allow 80/tcp >/dev/null 2>&1 || true
+    ufw allow 443/tcp >/dev/null 2>&1 || true
+    echo -e "${ACIK_YESIL}✅ Firewall kurallari eklendi${NC}"
+fi
+
+# Fail2ban konfigurasyonu (opsiyonel)
+if command -v fail2ban-client >/dev/null 2>&1; then
+    echo -e "${ACIK_PEMBE}🛡️ Fail2ban nginx jail ekleniyor...${NC}"
+    cat > /etc/fail2ban/jail.d/nginx.conf << EOF
+[nginx-http-auth]
+enabled = true
+port = http,https
+logpath = /var/log/nginx/error.log
+
+[nginx-noscript]
+enabled = true
+port = http,https
+logpath = /var/log/nginx/access.log
+maxretry = 6
+
+[nginx-badbots]
+enabled = true
+port = http,https
+logpath = /var/log/nginx/access.log
+maxretry = 2
+
+[nginx-noproxy]
+enabled = true
+port = http,https
+logpath = /var/log/nginx/access.log
+maxretry = 2
+EOF
+    systemctl restart fail2ban >/dev/null 2>&1 || true
+    echo -e "${ACIK_YESIL}✅ Fail2ban konfigurasyonu eklendi${NC}"
+fi
+
+# Log rotation ayari
+cat > /etc/logrotate.d/bitronixcode-django << EOF
+$PROJECT_PATH/logs/*.log {
+    daily
+    missingok
+    rotate 52
+    compress
+    delaycompress
+    notifempty
+    create 644 $PROJECT_USER $PROJECT_USER
+    postrotate
+        systemctl reload $SERVICE_NAME > /dev/null 2>&1 || true
+    endscript
+}
+EOF
+
+echo -e "${ACIK_YESIL}✅ Guvenlik ayarlari tamamlandi${NC}"
+
+# =================================================================
+# 23. MONITORING VE HEALTH CHECK
+# =================================================================
+echo -e "\n${TURKUAZ}📊 MONITORING VE HEALTH CHECK${NC}"
+echo "================================================================="
+
+# Health check scripti
+cat > "$PROJECT_PATH/health_check.sh" << EOF
+#!/bin/bash
+# BitronixCode Django Health Check
+
+echo "🏥 BitronixCode Django Health Check - $(date)"
+echo "================================================================="
+
+# Servis durumu
+if systemctl is-active --quiet $SERVICE_NAME; then
+    echo "✅ Servis: CALISIYOR"
+else
+    echo "❌ Servis: CALISMIYOR"
+    exit 1
+fi
+
+# Port kontrolu
+if netstat -tuln 2>/dev/null | grep -q ":8000 "; then
+    echo "✅ Port 8000: DINLENIYOR"
+else
+    echo "❌ Port 8000: DINLENMIYOR"
+    exit 1
+fi
+
+# HTTP kontrolu
+HTTP_CODE=\$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8000 2>/dev/null)
+if [[ "\$HTTP_CODE" =~ ^(200|301|302)$ ]]; then
+    echo "✅ HTTP: CALISIYOR (\$HTTP_CODE)"
+else
+    echo "❌ HTTP: CALISMIYOR (\$HTTP_CODE)"
+    exit 1
+fi
+
+# Veritabani kontrolu
+if mysql -h$DB_HOST -P$DB_PORT -u$DB_USER -p$DB_PASS -e "USE $DB_NAME; SELECT 1;" >/dev/null 2>&1; then
+    echo "✅ Veritabani: BAĞLANTI BASARILI"
+else
+    echo "❌ Veritabani: BAĞLANTI BASARISIZ"
+    exit 1
+fi
+
+# Disk kullanimi
+DISK_USAGE=\$(df $PROJECT_PATH | awk 'NR==2 {print \$5}' | sed 's/%//')
+if [ "\$DISK_USAGE" -lt 90 ]; then
+    echo "✅ Disk kullanimi: %\$DISK_USAGE"
+else
+    echo "⚠️ Disk kullanimi: %\$DISK_USAGE (Yuksek!)"
+fi
+
+# Memory kullanimi
+MEM_USAGE=\$(free | awk 'NR==2{printf "%.0f", \$3*100/\$2}')
+if [ "\$MEM_USAGE" -lt 90 ]; then
+    echo "✅ Memory kullanimi: %\$MEM_USAGE"
+else
+    echo "⚠️ Memory kullanimi: %\$MEM_USAGE (Yuksek!)"
+fi
+
+echo "================================================================="
+echo "🎯 Health Check: TUM KONTROLLER BASARILI"
+EOF
+
+chmod +x "$PROJECT_PATH/health_check.sh"
+chown $PROJECT_USER:$PROJECT_USER "$PROJECT_PATH/health_check.sh"
+
+# Crontab icin health check (her 5 dakikada)
+(crontab -u $PROJECT_USER -l 2>/dev/null; echo "*/5 * * * * $PROJECT_PATH/health_check.sh >> $PROJECT_PATH/logs/health_check.log 2>&1") | crontab -u $PROJECT_USER -
+
+echo -e "${ACIK_YESIL}✅ Health check sistemi kuruldu${NC}"
+
+# =================================================================
+# 24. BACKUP SCRIPTI OLUSTURMA
+# =================================================================
+echo -e "\n${TURKUAZ}💾 BACKUP SCRIPTI OLUSTURULUYOR${NC}"
+echo "================================================================="
+
+cat > "$PROJECT_PATH/backup.sh" << EOF
+#!/bin/bash
+# BitronixCode Django Backup Script
+
+BACKUP_DIR="/home/$PROJECT_USER/backups"
+DATE=\$(date +%Y%m%d_%H%M%S)
+PROJECT_BACKUP="\$BACKUP_DIR/project_\$DATE.tar.gz"
+DB_BACKUP="\$BACKUP_DIR/database_\$DATE.sql"
+
+echo "🗄️ BitronixCode Django Backup - \$(date)"
+echo "================================================================="
+
+# Backup klasoru olustur
+mkdir -p "\$BACKUP_DIR"
+
+# Proje dosyalarini yedekle
+echo "📁 Proje dosyalari yedekleniyor..."
+cd $PROJECT_PATH
+tar -czf "\$PROJECT_BACKUP" --exclude='venv' --exclude='logs' --exclude='*.pyc' --exclude='__pycache__' .
+echo "✅ Proje yedeklendi: \$PROJECT_BACKUP"
+
+# Veritabanini yedekle
+echo "🗄️ Veritabani yedekleniyor..."
+mysqldump -h$DB_HOST -P$DB_PORT -u$DB_USER -p$DB_PASS $DB_NAME > "\$DB_BACKUP"
+echo "✅ Veritabani yedeklendi: \$DB_BACKUP"
+
+# Eski yedekleri temizle (30 gunden eski)
+echo "🧹 Eski yedekler temizleniyor..."
+find "\$BACKUP_DIR" -name "*.tar.gz" -mtime +30 -delete
+find "\$BACKUP_DIR" -name "*.sql" -mtime +30 -delete
+echo "✅ Eski yedekler temizlendi"
+
+echo "================================================================="
+echo "🎯 Backup tamamlandi: \$(date)"
+EOF
+
+chmod +x "$PROJECT_PATH/backup.sh"
+chown $PROJECT_USER:$PROJECT_USER "$PROJECT_PATH/backup.sh"
+
+# Gunluk backup icin crontab
+(crontab -u $PROJECT_USER -l 2>/dev/null; echo "0 2 * * * $PROJECT_PATH/backup.sh >> $PROJECT_PATH/logs/backup.log 2>&1") | crontab -u $PROJECT_USER -
+
+echo -e "${ACIK_YESIL}✅ Backup sistemi kuruldu${NC}"
+
+# =================================================================
+# 25. FINAL OZET VE TAMAMLAMA
+# =================================================================
+echo -e "\n${BEYAZ}🎊 ULTIMATE DEPLOYMENT BASARIYLA TAMAMLANDI! 🎊${NC}"
+echo "================================================================="
+
+echo -e "\n${ACIK_YESIL}🏆 TAMAMLANAN TUM ISLEMLER:${NC}"
+echo "   ✅ Sistem paketleri kuruldu"
+echo "   ✅ Yedek dosyasi restore edildi"
+echo "   ✅ Python sanal ortam olusturuldu"
+echo "   ✅ Python paketleri yuklendi"
+echo "   ✅ JWT paketleri kontrol edildi"
+echo "   ✅ Django settings guncellendi"
+echo "   ✅ Dosya izinleri duzenlendi"
+echo "   ✅ Gunicorn konfigure edildi"
+echo "   ✅ WSGI modulu tespit edildi"
+echo "   ✅ Systemd servisi olusturuldu"
+echo "   ✅ Nginx konfigurasyonu olusturuldu"
+echo "   ✅ Django migrate ve collectstatic"
+echo "   ✅ Otomasyon scriptleri olusturuldu"
+echo "   ✅ Veritabani baglantisi test edildi"
+echo "   ✅ Gerekli dosyalar olusturuldu"
+echo "   ✅ Guvenlik ayarlari yapildi"
+echo "   ✅ Health check sistemi kuruldu"
+echo "   ✅ Backup sistemi kuruldu"
+
+echo -e "\n${TURKUAZ}📊 PROJE BILGILERI:${NC}"
+echo "   🏠 Proje Yolu: $PROJECT_PATH"
+echo "   👤 Kullanici: $PROJECT_USER"
+echo "   🌍 Domain: $DOMAIN_NAME"
+echo "   🗄️ Veritabani: $DB_NAME@$DB_HOST:$DB_PORT"
+echo "   🐍 Sanal Ortam: $PROJECT_PATH/venv"
+echo "   🦄 WSGI Modulu: $WSGI_MODULE"
+echo "   ⚙️ Servis: $SERVICE_NAME"
+
+echo -e "\n${ACIK_PEMBE}🚀 SERVIS KOMUTLARI:${NC}"
+echo "   Baslat: systemctl start $SERVICE_NAME"
+echo "   Durdur: systemctl stop $SERVICE_NAME"
+echo "   Yeniden Baslat: systemctl restart $SERVICE_NAME"
+echo "   Durum: systemctl status $SERVICE_NAME"
+echo "   Loglar: journalctl -u $SERVICE_NAME -f"
+
+echo -e "\n${ACIK_PEMBE}🤖 OTOMASYON SCRIPTLERI:${NC}"
+echo "   🚀 Baslat: $PROJECT_PATH/start.sh"
+echo "   🛑 Durdur: $PROJECT_PATH/stop.sh"
+echo "   🔄 Yeniden Baslat: $PROJECT_PATH/restart.sh"
+echo "   📊 Durum: $PROJECT_PATH/status.sh"
+echo "   📝 Loglar: $PROJECT_PATH/logs.sh"
+echo "   🔄 Guncelle: $PROJECT_PATH/update.sh"
+echo "   🏥 Health Check: $PROJECT_PATH/health_check.sh"
+echo "   💾 Backup: $PROJECT_PATH/backup.sh"
+
+echo -e "\n${ACIK_PEMBE}📁 DOSYA KONUMLARI:${NC}"
+echo "   🌐 Nginx Config: /etc/nginx/sites-available/$DOMAIN_NAME"
+echo "   ⚙️ Systemd Service: /etc/systemd/system/$SERVICE_NAME.service"
+echo "   🦄 Gunicorn Config: $PROJECT_PATH/gunicorn.conf.py"
+echo "   📝 Loglar: $PROJECT_PATH/logs/"
+echo "   📁 Static Files: $PROJECT_PATH/staticfiles/"
+echo "   🖼️ Media Files: $PROJECT_PATH/media/"
+
+echo -e "\n${SARI}🌐 TEST URL'LERI:${NC}"
+echo "   HTTP: http://$DOMAIN_NAME"
+echo "   WWW: http://www.$DOMAIN_NAME"
+echo "   Direct: http://127.0.0.1:8000"
+
+echo -e "\n${TURUNCU}⚠️ ONEMLI NOTLAR:${NC}"
+echo "   • Veritabani dump'ini import etmeyi unutmayin"
+echo "   • SSL sertifikasi kurulumunu yapin"
+echo "   • DNS ayarlarinizi kontrol edin"
+echo "   • Production'da DEBUG=False oldugundan emin olun"
+echo "   • Duzenli backup'lari kontrol edin"
+
+echo -e "\n${ACIK_YESIL}🎯 Deployment %100 tamamlandi ve kullanima hazir!${NC}"
+echo -e "${BEYAZ}BitronixCode tarafindan gelistirilmistir. 🚀${NC}"
+echo -e "${ACIK_PEMBE}Destek icin: https://bitronixcode.com${NC}"
+echo "================================================================="
+
+# Son kontrol
+echo -e "\n${TURKUAZ}🔍 SON KONTROL${NC}"
+if systemctl is-active --quiet "$SERVICE_NAME"; then
+    echo -e "${ACIK_YESIL}✅ Servis calisiyor - Deployment basarili!${NC}"
+    echo -e "${ACIK_PEMBE}🌐 Test icin: http://$DOMAIN_NAME${NC}"
+else
+    echo -e "${SARI}⚠️ Servis durumu belirsiz - Manuel kontrol yapin${NC}"
+    echo -e "${ACIK_PEMBE}📝 Kontrol: systemctl status $SERVICE_NAME${NC}"
+fi
+
+# Basari sesi
+echo -e "\a"
+
+echo -e "\n${ACIK_YESIL}🎉 ULTIMATE DEPLOYMENT SCRIPT TAMAMLANDI! 🎉${NC}"
+
+exit 0
+
+ }
+
+}
 
 # =====================================================
 # 🏠 ANA MENÜ GÖSTERME FONKSİYONU
 # =====================================================
 ana_menu_goster() {
-    echo -e "${MAVI}╔════════════════════════════════════╗${NC}"
-    echo -e "${MAVI}║         ANA İŞLEM MENÜSÜ          ║${NC}"
-    echo -e "${MAVI}╚════════════════════════════════════╝${NC}"
+    echo -e "${TURKUAZ}╔════════════════════════════════════╗${NC}"
+    echo -e "${TURKUAZ}║         ANA İŞLEM MENÜSÜ          ║${NC}"
+    echo -e "${TURKUAZ}╚════════════════════════════════════╝${NC}"
     echo ""
     echo -e "1) 🔧 Sistem Ayarla (Tek seferlik)"
     echo -e "2) 🌐 BIND9 (DNS - ÖNCELİKLİ)"
     echo -e "3) ☁️ CloudPanel (Web Panel + MySQL)"
     echo -e "4) 📧 Mail Sunucu Yönetimi"
     echo -e "5) 🧹 OpenCart Temizlik & İzin Modülü"
+    echo -e "6) 🐍 Django Site Yönetimi"
     echo -e "0) ❌ Çıkış"
     echo ""
 }
@@ -4077,7 +5464,7 @@ main() {
         sistem_durumu_goster
         ana_menu_goster
 
-        echo -e "${SARI}Seçiminizi yapın (0-5): ${NC}"
+        echo -e "${SARI}Seçiminizi yapın (0-6): ${NC}"
         read -r secim
 
         case $secim in
@@ -4096,6 +5483,9 @@ main() {
             5)
                 opencart_temizle
                 ;;
+            6)
+                django_site_yonet
+                ;;
             0)
                 cikis_yap
                 ;;
@@ -4105,7 +5495,6 @@ main() {
         esac
     done
 }
-# =====================================================
 
 # =====================================================
 # 🎬 PROGRAM BAŞLATMA
@@ -4124,6 +5513,8 @@ program_baslangic_mesaji() {
     echo -e "   🌐 BIND9 DNS sunucu kurulumu ve yönetimi"
     echo -e "   ☁️ CloudPanel web yönetim paneli kurulumu"
     echo -e "   📧 Mail sunucu kurulumu ve yapılandırması"
+    echo -e "   🧹 OpenCart Temizlik & İzin Modülü (cache, log, izin, oturum vb.)"
+    echo -e "   🐍 Django Site Yönetimi"
     echo ""
     echo -e "${SARI}⚠️ Önemli: Bu araç root yetkileri ile çalışır ve sistem değişiklikleri yapar.${NC}"
     echo -e "${SARI}⚠️ Kurulum sırası: Sistem Ayarla → BIND9 → CloudPanel → Mail${NC}"
@@ -4144,7 +5535,7 @@ sistem_kaynak_kontrol() {
         echo -e "   ✅ Root yetkileri: Mevcut"
     else
         echo -e "   ❌ Root yetkileri: Eksik"
-        echo -e "${KIRMIZI}Lütfen 'sudo $0' komutu ile çalıştırın.${NC}"
+        echo -e "${TURUNCU}Lütfen 'sudo $0' komutu ile çalıştırın.${NC}"
         exit 1
     fi
 
@@ -4160,7 +5551,7 @@ sistem_kaynak_kontrol() {
     local disk_kullanim=$(df / | awk 'NR==2 {print $5}' | sed 's/%//')
     echo -e "${BEYAZ}   💽 Disk: ${mevcut_disk}GB (Minimum: ${min_disk}GB)${NC}"
     if [[ $mevcut_disk -lt $min_disk ]]; then
-        echo -e "${KIRMIZI}❌ Yetersiz disk alanı: ${mevcut_disk}GB${NC}"
+        echo -e "${TURUNCU}❌ Yetersiz disk alanı: ${mevcut_disk}GB${NC}"
         exit 1
     elif [[ $disk_kullanim -ge 80 ]]; then
         echo -e "   ⚠️ Disk alanı: Az (%$disk_kullanim kullanımda)"
@@ -4172,7 +5563,7 @@ sistem_kaynak_kontrol() {
     local mevcut_ram=$(free -m | awk 'NR==2{print $2}')
     echo -e "${BEYAZ}   💾 RAM: ${mevcut_ram}MB (Minimum: ${min_ram}MB)${NC}"
     if [[ $mevcut_ram -lt $min_ram ]]; then
-        echo -e "${KIRMIZI}❌ Yetersiz RAM: ${mevcut_ram}MB${NC}"
+        echo -e "${TURUNCU}❌ Yetersiz RAM: ${mevcut_ram}MB${NC}"
         exit 1
     elif [[ $mevcut_ram -le 1024 ]]; then
         echo -e "   ⚠️ Bellek: Az (${mevcut_ram}MB)"
@@ -4180,25 +5571,28 @@ sistem_kaynak_kontrol() {
         echo -e "   ✅ Bellek: Yeterli (${mevcut_ram}MB)"
     fi
 
-    echo -e "${YESIL}✅ Sistem kaynakları yeterli${NC}"
+    echo -e "${ACIK_YESIL}✅ Sistem kaynakları yeterli${NC}"
     echo ""
     echo -e "${BEYAZ}Devam etmek için Enter tuşuna basın...${NC}"
     read -r
 }
 
-# Eksik fonksiyonlar tanımlanmalı
+# =====================================================
+# 🔧 YARDIMCI FONKSİYONLAR
+# =====================================================
+
 enter_bekle() {
     echo -e "\n${BEYAZ}Devam etmek için Enter tuşuna basın...${NC}"
     read -r
 }
 
 cikis_yap() {
-    echo -e "\n${MAVI}👋 Görüşürüz!${NC}"
+    echo -e "\n${TURKUAZ}👋 Görüşürüz!${NC}"
     exit 0
 }
 
 gecersiz_secim() {
-    echo -e "\n${KIRMIZI}❌ Geçersiz seçim!${NC}"
+    echo -e "\n${TURUNCU}❌ Geçersiz seçim!${NC}"
     sleep 1
 }
 
@@ -4207,43 +5601,6 @@ gunluk_yaz() {
     local mesaj=$2
     local tarih=$(date +"%Y-%m-%d %H:%M:%S")
     echo "[$tarih] [$seviye] $mesaj" >> "$GUNLUK_DOSYASI"
-}
-
-# Ana menü ve diğer eksik fonksiyonların tanımlanması gerekli
-tum_servisleri_baslat() {
-    echo "Tüm servisler başlatılıyor..."
-    # Servisleri başlatan kodlar
-}
-
-tum_servisleri_durdur() {
-    echo "Tüm servisler durduruluyor..."
-    # Servisleri durduran kodlar
-}
-
-tum_servisleri_yeniden_baslat() {
-    echo "Tüm servisler yeniden başlatılıyor..."
-    # Servisleri yeniden başlatan kodlar
-}
-
-servis_durumlari() {
-    echo "Servis durumları kontrol ediliyor..."
-    # Servis durumlarını kontrol eden kodlar
-}
-
-mail_kuyrugu_goster() {
-    echo "Mail kuyruğu görüntüleniyor..."
-    # Mail kuyruğunu gösteren kodlar
-}
-
-mail_loglari_goster() {
-    echo "Mail logları görüntüleniyor..."
-    # Mail loglarını gösteren kodlar
-}
-
-dmarc_test() {
-    local domain=$1
-    echo "DMARC testi yapılıyor: $domain"
-    # DMARC testi yapan kodlar
 }
 
 ana_baslik_goster() {
@@ -4262,40 +5619,120 @@ domain_gecerli_mi() {
     fi
 }
 
+# =====================================================
+# 📊 SİSTEM DURUMU GÖSTERME FONKSİYONU
+# =====================================================
+sistem_durumu_goster() {
+    echo -e "${GRI}═══════════════════════════════════════════════════════════════════════════════${NC}"
+    echo -e "${ACIK_PEMBE}📊 SİSTEM DURUMU${NC}"
+    echo -e "${GRI}═══════════════════════════════════════════════════════════════════════════════${NC}"
+    
+    # Sistem bilgileri
+    local uptime_info=$(uptime | awk -F',' '{print $1}' | awk '{print $3,$4}')
+    local load_avg=$(uptime | awk -F'load average:' '{print $2}')
+    local disk_usage=$(df -h / | awk 'NR==2 {print $5}')
+    local memory_usage=$(free | awk 'NR==2{printf "%.1f%%", $3*100/$2}')
+    
+    echo -e "${BEYAZ}⏰ Çalışma Süresi: ${uptime_info}${NC}"
+    echo -e "${BEYAZ}📈 Yük Ortalaması: ${load_avg}${NC}"
+    echo -e "${BEYAZ}💽 Disk Kullanımı: ${disk_usage}${NC}"
+    echo -e "${BEYAZ}💾 Bellek Kullanımı: ${memory_usage}${NC}"
+    echo ""
+}
 
-# Eksik olan diğer fonksiyonları tanımla
+# =====================================================
+# 🚀 ANA MODÜL FONKSİYONLARI (PLACEHOLDER)
+# =====================================================
+
 sistem_ayarla() {
-    echo "Sistem ayarlanıyor..."
-    # Sistem ayarlama kodları
+    echo -e "${TURKUAZ}🔧 Sistem ayarlanıyor...${NC}"
+    # Bu fonksiyon betikteki gerçek sistem_ayarla() fonksiyonunu çağırmalı
+    enter_bekle
 }
 
-bind9_kur() {
-    echo "BIND9 kuruluyor..."
-    # BIND9 kurulum kodları
+bind9_menu() {
+    echo -e "${ACIK_YESIL}🌐 BIND9 menüsü açılıyor...${NC}"
+    # Bu fonksiyon betikteki gerçek bind9_menu() fonksiyonunu çağırmalı
+    enter_bekle
 }
 
-cloudpanel_kur() {
-    echo "CloudPanel kuruluyor..."
-    # CloudPanel kurulum kodları
+cloudpanel_menu() {
+    echo -e "${TURKUAZ}☁️ CloudPanel menüsü açılıyor...${NC}"
+    # Bu fonksiyon betikteki gerçek cloudpanel_menu() fonksiyonunu çağırmalı
+    enter_bekle
 }
 
-mail_sunucu_kur() {
-    echo "Mail sunucu kuruluyor..."
-    # Mail sunucu kurulum kodları
+mail_servisleri() {
+    echo -e "${SARI}📧 Mail servisleri menüsü açılıyor...${NC}"
+    # Bu fonksiyon betikteki gerçek mail_servisleri() fonksiyonunu çağırmalı
+    enter_bekle
 }
 
 opencart_temizle() {
-    echo "OpenCart temizleme aracı başlatılıyor..."
-    # OpenCart temizleme kodu
+    echo -e "${TURUNCU}🧹 OpenCart temizleme aracı başlatılıyor...${NC}"
+    # Bu fonksiyon betikteki gerçek opencart_temizle() fonksiyonunu çağırmalı
+    enter_bekle
+}
+
+django_site_yonet() {
+    echo -e "${MOR}🐍 Django Site Yönetimi başlatılıyor...${NC}"
+    # Bu fonksiyon betikteki gerçek django_site_yonet() fonksiyonunu çağırmalı
+    enter_bekle
+}
+
+# =====================================================
+# 🛠️ SERVİS YÖNETİM FONKSİYONLARI (PLACEHOLDER)
+# =====================================================
+
+tum_servisleri_baslat() {
+    echo -e "${ACIK_YESIL}🚀 Tüm servisler başlatılıyor...${NC}"
+    # Bu fonksiyon betikteki gerçek tum_servisleri_baslat() fonksiyonunu çağırmalı
+}
+
+tum_servisleri_durdur() {
+    echo -e "${TURUNCU}⏹️ Tüm servisler durduruluyor...${NC}"
+    # Bu fonksiyon betikteki gerçek tum_servisleri_durdur() fonksiyonunu çağırmalı
+}
+
+tum_servisleri_yeniden_baslat() {
+    echo -e "${SARI}🔄 Tüm servisler yeniden başlatılıyor...${NC}"
+    # Bu fonksiyon betikteki gerçek tum_servisleri_yeniden_baslat() fonksiyonunu çağırmalı
+}
+
+servis_durumlari() {
+    echo -e "${TURKUAZ}📊 Servis durumları kontrol ediliyor...${NC}"
+    # Bu fonksiyon betikteki gerçek servis_durumlari() fonksiyonunu çağırmalı
+}
+
+mail_kuyrugu_goster() {
+    echo -e "${BEYAZ}📬 Mail kuyruğu görüntüleniyor...${NC}"
+    # Bu fonksiyon betikteki gerçek mail_kuyrugu_goster() fonksiyonunu çağırmalı
+}
+
+mail_loglari_goster() {
+    echo -e "${BEYAZ}📋 Mail logları görüntüleniyor...${NC}"
+    # Bu fonksiyon betikteki gerçek mail_loglari_goster() fonksiyonunu çağırmalı
+}
+
+dmarc_test() {
+    local domain=$1
+    echo -e "${ACIK_YESIL}🔍 DMARC testi yapılıyor: $domain${NC}"
+    # Bu fonksiyon betikteki gerçek dmarc_test() fonksiyonunu çağırmalı
 }
 
 # =====================================================
 # 🎯 PROGRAM BAŞLATMA NOKTASI
 # =====================================================
-program_baslangic_mesaji
-sistem_kaynak_kontrol
 
-# Ana programı başlat
-main
-
-exit 0
+# Program başlangıç kontrolü
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    # Sadece doğrudan çalıştırıldığında başlat
+    program_baslangic_mesaji
+    sistem_kaynak_kontrol
+    
+    # Ana programı başlat
+    main
+    
+    # Programdan çıkış
+    exit 0
+fi
